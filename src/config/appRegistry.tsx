@@ -1,8 +1,9 @@
-import { FolderOpen, Settings, Globe, FileText, Eye } from "lucide-react";
+import { FolderOpen, Settings, Globe, FileText, Eye, Heart } from "lucide-react";
 import type { AppRegistryEntry, AppID } from "@/types/os";
 import { Finder } from "@/components/apps/finder/Finder";
 import { TextEditor } from "@/components/apps/TextEditor";
 import { ImageViewer } from "@/components/apps/ImageViewer";
+import { LoveLetters } from "@/components/apps/LoveLetters/LoveLetters";
 
 // Placeholder app components (Settings & Browser — to be replaced later)
 
@@ -54,6 +55,14 @@ export const APP_REGISTRY: AppRegistryEntry[] = [
     defaultSize: { width: 600, height: 500 },
     defaultPosition: { x: 200, y: 80 },
     component: ImageViewer,
+  },
+  {
+    id: "love-letters",
+    name: "Love Letters",
+    icon: Heart,
+    defaultSize: { width: 900, height: 650 },
+    defaultPosition: { x: 150, y: 50 },
+    component: LoveLetters,
   },
 ];
 
