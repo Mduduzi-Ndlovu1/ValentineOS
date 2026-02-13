@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  overflow: hidden;
+  height: 100dvh;
+  width: 100dvw;
+  position: fixed;
+  inset: 0;
+}
