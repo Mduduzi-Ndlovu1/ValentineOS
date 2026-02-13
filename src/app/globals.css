@@ -10,3 +10,24 @@ body {
   position: fixed;
   inset: 0;
 }
+
+/* Tiptap Editor Styles */
+.tiptap-editor {
+  outline: none;
+  font-family: var(--font-dancing-script), cursive;
+  font-size: 1.5rem;
+  line-height: 2;
+  color: #4a4a4a;
+}
+
+.tiptap-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap-editor p {
+  margin-bottom: 0.5rem;
+}

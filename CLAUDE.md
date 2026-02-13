@@ -20,6 +20,8 @@ A high-fidelity, macOS-inspired Web Operating System built as a single-page appl
 | Animation         | Framer Motion (interactions/drag) + GSAP (complex timelines) |
 | Icons             | Lucide React                      |
 | Language          | TypeScript (strict mode)          |
+| Rich Text Editor  | Tiptap (headless)                 |
+| Backend           | Supabase                          |
 
 ## Core Philosophy & Rules
 
@@ -36,15 +38,20 @@ A high-fidelity, macOS-inspired Web Operating System built as a single-page appl
 ```
 src/
 ├── app/
-│   ├── layout.tsx              # Root layout: Jotai Provider, Inter font, DaisyUI valentine theme
+│   ├── layout.tsx              # Root layout: Jotai Provider, Dancing Script font, DaisyUI valentine theme
 │   ├── page.tsx                # Single page: renders <Desktop />
-│   └── globals.css             # Tailwind directives + body overflow lock (100dvh, position fixed)
+│   └── globals.css             # Tailwind directives + body overflow lock + Tiptap editor styles
 ├── components/
 │   ├── apps/
 │   │   ├── finder/
 │   │   │   └── Finder.tsx      # Full Finder app: sidebar, breadcrumbs, grid view, navigation
 │   │   ├── TextEditor.tsx      # Read-only text/code viewer (monospace <pre>)
-│   │   └── ImageViewer.tsx     # Image preview (centered <img>, dark bg)
+│   │   ├── ImageViewer.tsx     # Image preview (centered <img>, dark bg)
+│   │   └── LoveLetters/
+│   │       ├── LoveLetters.tsx  # Main container with sidebar + desk background
+│   │       ├── LetterSidebar.tsx # Glassmorphism sidebar with + button
+│   │       ├── LetterEditor.tsx  # Tiptap rich text editor
+│   │       └── Stationery.tsx   # Paper component with lined texture
 │   ├── desktop/
 │   │   ├── Desktop.tsx         # Full-screen container, wallpaper bg, renders icons + dock + window manager
 │   │   └── DesktopIcon.tsx     # Individual draggable icon (Framer Motion drag, double-click to open app)
@@ -57,17 +64,23 @@ src/
 │       └── WindowTitleBar.tsx  # Traffic lights (close/min/max) + pointer-event drag handle
 ├── config/
 │   ├── appRegistry.tsx         # APP_REGISTRY array + APP_REGISTRY_MAP (O(1) lookup) + getAppEntry()
-│   └── initialFileSystem.ts    # Normalized mock file system data (folders, files, images)
+│   └── initialFileSystem.ts     # Normalized mock file system data (folders, files, images)
+├── lib/
+│   └── supabase.ts             # Supabase client with graceful fallback
+├── services/
+│   └── letterService.ts        # CRUD: fetchLetters, createLetter, updateLetter, sealLetter
 ├── store/
 │   ├── actions/
 │   │   └── fileActions.ts      # openFileAtom — maps file types to app windows
 │   ├── atoms/
 │   │   ├── desktop.ts          # wallpaperAtom, wallpaperFallbackAtom, desktopIconsAtom
 │   │   ├── filesystem.ts       # fileSystemAtom, folderContentsAtom, fileSystemItemAtom, breadcrumbAtom
+│   │   ├── letters.ts          # lettersAtom, loadLettersAtom
 │   │   └── windows.ts          # openWindowsAtom, focusedWindowAtom, zIndexCounterAtom + 6 action atoms
 │   └── provider.tsx            # "use client" Jotai Provider wrapper
 └── types/
     ├── fs.ts                   # File system types: ItemType, FileSystemItem, FileSystemState
+    ├── letters.ts              # LoveLetter interface
     └── os.ts                   # All OS type definitions + window size constants
 ```
 
@@ -87,7 +100,7 @@ src/
 ### OS Types (`src/types/os.ts`)
 
 ```
-AppID               = "finder" | "settings" | "browser" | "text-editor" | "image-viewer"
+AppID               = "finder" | "settings" | "browser" | "text-editor" | "image-viewer" | "love-letters"
 WindowPosition      = { x, y }
 WindowSize          = { width, height }
 WindowAppProps      = { content?, imageUrl? }
@@ -106,6 +119,12 @@ MIN_WINDOW_HEIGHT   = 200
 ItemType            = "folder" | "image" | "text" | "music" | "code"
 FileSystemItem      = { id, parentId, name, type, content?, children?, createdAt }
 FileSystemState     = { items: Record<string, FileSystemItem>, rootId }
+```
+
+### Letter Types (`src/types/letters.ts`)
+
+```
+LoveLetter          = { id, created_at, title, content, author, is_sealed, theme: 'classic' | 'valentine' | 'dark' }
 ```
 
 - **Normalized flat map** — all items stored in `Record<string, FileSystemItem>` for O(1) lookup by ID
@@ -144,15 +163,24 @@ FileSystemState     = { items: Record<string, FileSystemItem>, rootId }
 | `fileSystemItemAtom`  | derived `(itemId) => FileSystemItem?`     | Returns a single item by ID                     |
 | `breadcrumbAtom`      | derived `(itemId) => FileSystemItem[]`    | Walks parentId chain to build breadcrumb path   |
 
+### `letters.ts`
+| Atom                  | Type                         | Purpose                                        |
+| --------------------- | ---------------------------- | ---------------------------------------------- |
+| `lettersAtom`        | `atom<LoveLetter[]>`         | Holds array of letters from Supabase            |
+| `loadLettersAtom`    | write-only action            | Fetches letters from Supabase and updates state |
+
 ## App Registry (`src/config/appRegistry.tsx`)
 
-Three registered apps (Finder is fully implemented; Settings & Browser are placeholders):
+Five registered apps:
 
-| AppID      | Name     | Icon (Lucide)  | Default Size | Default Position | Component                  |
-| ---------- | -------- | -------------- | ------------ | ---------------- | -------------------------- |
-| `finder`   | Finder   | `FolderOpen`   | 800 x 500   | (100, 100)       | `Finder` (full app)        |
-| `settings` | Settings | `Settings`     | 600 x 450   | (150, 120)       | placeholder `<div>`        |
-| `browser`  | Browser  | `Globe`        | 900 x 600   | (200, 80)        | placeholder `<div>`        |
+| AppID          | Name         | Icon (Lucide)  | Default Size | Default Position | Component                  |
+| -------------- | ------------ | -------------- | ------------ | --------------- | -------------------------- |
+| `finder`       | Finder       | `FolderOpen`   | 800 x 500   | (100, 100)      | `Finder` (full app)        |
+| `settings`     | Settings     | `Settings`     | 600 x 450   | (150, 120)      | placeholder `<div>`        |
+| `browser`      | Browser      | `Globe`        | 900 x 600   | (200, 80)       | placeholder `<div>`        |
+| `text-editor`  | Text Editor  | `FileText`     | 500 x 600   | (180, 60)       | `TextEditor`               |
+| `image-viewer` | Preview      | `Eye`          | 600 x 500   | (200, 80)       | `ImageViewer`              |
+| `love-letters` | Love Letters | `Heart`        | 900 x 650   | (150, 50)       | `LoveLetters` (full app)  |
 
 **Note:** This file is `.tsx` (not `.ts`) because placeholder components use JSX.
 
@@ -317,6 +345,40 @@ All tickets completed in order:
 - Desktop icons and Dock slide up from `y: 100` with staggered spring animations after boot completes
 - Icons stagger by `i * 0.05s` delay for a cascading reveal effect
 
+### TICKET-009: Preview Engine & File Associations ✅
+- `WindowInstance` has `props` field for passing data to apps
+- Created `TextEditor.tsx` — monospace text display with glassmorphism
+- Created `ImageViewer.tsx` — centered image with dark background
+- Updated `appRegistry.tsx` with text-editor and image-viewer entries
+- Created `fileActions.ts`Atom` dispatcher
+- Finder double-click wired with `openFile to open appropriate app based on file type
+
+### TICKET-011: Supabase Integration ✅
+- Created `src/lib/supabase.ts` — Supabase client with graceful fallback if env vars missing
+- Created `src/types/letters.ts` — `LoveLetter` interface matching SQL table
+- Created `src/services/letterService.ts` — CRUD functions: fetchLetters, createLetter, updateLetter, sealLetter
+- Created `src/store/atoms/letters.ts` — Jotai atoms: lettersAtom, loadLettersAtom
+
+### TICKET-012: Love Letters App UI ✅
+- Created `src/components/apps/LoveLetters/LoveLetters.tsx` — Main container with sidebar + wood desk background
+- Created `src/components/apps/LoveLetters/LetterSidebar.tsx` — Glassmorphism sidebar listing letters by date
+- Created `src/components/apps/LoveLetters/Stationery.tsx` — Paper component with lined texture and wax seal
+- Added Dancing Script font to `src/app/layout.tsx`
+- Updated `AppID` type to include "love-letters"
+- Updated appRegistry with Love Letters entry
+
+### TICKET-013: Tiptap Editor Integration ✅
+- Installed Tiptap packages: @tiptap/react, @tiptap/starter-kit, @tiptap/extension-placeholder, @tiptap/extension-typography
+- Created `src/components/apps/LoveLetters/LetterEditor.tsx` — Headless Tiptap editor
+- Added `.tiptap-editor` styles in `globals.css` with Dancing Script font
+- Fixed SSR hydration error with `immediatelyRender: false`
+- Added debounce auto-save (2s for content, 500ms for title/author)
+- Added "Saving..." / "Draft saved" indicators
+- Added "New Letter" button (+ in sidebar)
+- Added "Save" button (saves + seals) and "Seal" button
+- Updated wax seal to use Heart icon
+- Fixed input lag with proper debouncing and local state
+
 ---
 
 ## Gotchas & Lessons Learned
@@ -325,6 +387,8 @@ All tickets completed in order:
 2. **JSX in config** — `appRegistry` has placeholder React components with JSX, so it must be `.tsx` not `.ts`.
 3. **autoprefixer** — Next.js 14 with Tailwind requires `autoprefixer` as an explicit dev dependency.
 4. **Old files** — When converting from a plain TS project, leftover `src/index.ts` caused build failure. Must clean up.
+5. **Tiptap SSR** — Always set `immediatelyRender: false` in useEditor to avoid hydration mismatches in Next.js.
+6. **Input lag** — Never call database updates on every keystroke. Use debouncing + local state to prevent UI lag.
 
 ---
 

@@ -9,6 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
+    "@tiptap/extension-placeholder": "^3.19.0",
+    "@tiptap/extension-typography": "^3.19.0",
+    "@tiptap/react": "^3.19.0",
+    "@tiptap/starter-kit": "^3.19.0",
     "framer-motion": "^11.0.0",
     "gsap": "^3.12.0",
     "jotai": "^2.6.0",

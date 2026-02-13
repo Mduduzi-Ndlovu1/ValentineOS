@@ -117,15 +117,18 @@ import { WindowTitleBar } from "./WindowTitleBar";
 src/
 ├── app/           # Next.js pages (layout.tsx, page.tsx, globals.css)
 ├── components/    # React components
-│   ├── apps/      # App components (Finder, TextEditor, ImageViewer)
+│   ├── apps/      # App components (Finder, TextEditor, ImageViewer, LoveLetters)
+│   │   └── LoveLetters/   # Love letters app (LoveLetters, LetterSidebar, LetterEditor, Stationery)
 │   ├── desktop/   # Desktop components (Desktop, DesktopIcon)
-│   ├── dock/     # Dock components (Dock, DockIcon)
+│   ├── dock/      # Dock components (Dock, DockIcon)
 │   └── window/    # Window system (WindowFrame, WindowManager, WindowTitleBar)
 ├── config/        # App registry, initial file system
-├── store/         # Jotai atoms and actions
-│   ├── atoms/     # State atoms (desktop.ts, filesystem.ts, windows.ts)
-│   └── actions/   # Complex actions (fileActions.ts)
-└── types/         # TypeScript definitions (os.ts, fs.ts)
+├── lib/          # Utility libraries (supabase.ts)
+├── services/     # Service layer (letterService.ts)
+├── store/        # Jotai atoms and actions
+│   ├── atoms/    # State atoms (desktop.ts, filesystem.ts, windows.ts, letters.ts)
+│   └── actions/  # Complex actions (fileActions.ts)
+└── types/        # TypeScript definitions (os.ts, fs.ts, letters.ts)
 ```
 
 ---
@@ -146,3 +149,37 @@ src/
 - Desktop icons persist positions to Jotai atom on drag end
 - Dock has magnification effect using shared `MotionValue` for mouse position
 - Boot sequence uses `AnimatePresence` for smooth transitions
+
+---
+
+## Love Letters App
+
+The Love Letters app is a romantic letter-writing application with Supabase backend integration.
+
+### Key Files
+- `src/components/apps/LoveLetters/LoveLetters.tsx` - Main container
+- `src/components/apps/LoveLetters/LetterSidebar.tsx` - Glassmorphism sidebar with + button
+- `src/components/apps/LoveLetters/LetterEditor.tsx` - Tiptap rich text editor
+- `src/components/apps/LoveLetters/Stationery.tsx` - Paper component with lined texture
+- `src/lib/supabase.ts` - Supabase client
+- `src/services/letterService.ts` - CRUD operations
+- `src/store/atoms/letters.ts` - Jotai state atoms
+- `src/types/letters.ts` - LoveLetter interface
+
+### Features
+- Create new letters with + button
+- Edit title, author, and content
+- Auto-save with debouncing (500ms for title/author, 2000ms for content)
+- Save button - saves and seals the letter (read-only)
+- Seal button - locks the letter without saving
+- Wax seal badge (Heart icon) on sealed letters
+
+### Tiptap Editor
+- Use `immediatelyRender: false` to avoid SSR hydration errors
+- Style `.tiptap-editor` class with Dancing Script font
+- Use debounced onUpdate callbacks to prevent excessive API calls
+
+### Font Configuration
+- Dancing Script font configured in `src/app/layout.tsx`
+- CSS variable: `--font-dancing-script`
+- Apply via: `style={{ fontFamily: "var(--font-dancing-script)" }}`
