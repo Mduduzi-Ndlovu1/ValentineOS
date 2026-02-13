@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
 
 // ─── App Identity ───
-export type AppID = "finder" | "settings" | "browser";
+export type AppID = "finder" | "settings" | "browser" | "text-editor" | "image-viewer";
 
 // ─── Window Geometry ───
 export interface WindowPosition {
@@ -15,6 +15,12 @@ export interface WindowSize {
   height: number;
 }
 
+// ─── Window App Props (passed from WindowInstance → app component) ───
+export interface WindowAppProps {
+  content?: string;
+  imageUrl?: string;
+}
+
 // ─── App Registry ───
 export interface AppRegistryEntry {
   id: AppID;
@@ -22,7 +28,7 @@ export interface AppRegistryEntry {
   icon: LucideIcon;
   defaultSize: WindowSize;
   defaultPosition: WindowPosition;
-  component: ComponentType;
+  component: ComponentType<WindowAppProps>;
 }
 
 // ─── Window Instance (runtime state) ───
@@ -36,6 +42,7 @@ export interface WindowInstance {
   isMinimized: boolean;
   isMaximized: boolean;
   preMaximizeRect?: { position: WindowPosition; size: WindowSize };
+  props?: WindowAppProps;
 }
 
 // ─── Desktop Icon State ───

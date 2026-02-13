@@ -4,6 +4,7 @@ import type {
   AppID,
   WindowPosition,
   WindowSize,
+  WindowAppProps,
 } from "@/types/os";
 import { getAppEntry } from "@/config/appRegistry";
 
@@ -14,25 +15,38 @@ const zIndexCounterAtom = atom<number>(100);
 
 // ─── Actions ───
 
-export const openWindowAtom = atom(null, (get, set, appId: AppID) => {
-  const app = getAppEntry(appId);
-  const zIndex = get(zIndexCounterAtom) + 1;
-  set(zIndexCounterAtom, zIndex);
+export const openWindowAtom = atom(
+  null,
+  (
+    get,
+    set,
+    payload: AppID | { appId: AppID; title?: string; props?: WindowAppProps }
+  ) => {
+    const { appId, title, props } =
+      typeof payload === "string"
+        ? { appId: payload, title: undefined, props: undefined }
+        : payload;
 
-  const newWindow: WindowInstance = {
-    id: `${appId}-${Date.now()}`,
-    appId,
-    title: app.name,
-    position: { ...app.defaultPosition },
-    size: { ...app.defaultSize },
-    zIndex,
-    isMinimized: false,
-    isMaximized: false,
-  };
+    const app = getAppEntry(appId);
+    const zIndex = get(zIndexCounterAtom) + 1;
+    set(zIndexCounterAtom, zIndex);
 
-  set(openWindowsAtom, [...get(openWindowsAtom), newWindow]);
-  set(focusedWindowAtom, newWindow.id);
-});
+    const newWindow: WindowInstance = {
+      id: `${appId}-${Date.now()}`,
+      appId,
+      title: title ?? app.name,
+      position: { ...app.defaultPosition },
+      size: { ...app.defaultSize },
+      zIndex,
+      isMinimized: false,
+      isMaximized: false,
+      props,
+    };
+
+    set(openWindowsAtom, [...get(openWindowsAtom), newWindow]);
+    set(focusedWindowAtom, newWindow.id);
+  }
+);
 
 export const closeWindowAtom = atom(null, (get, set, windowId: string) => {
   const windows = get(openWindowsAtom).filter((w) => w.id !== windowId);

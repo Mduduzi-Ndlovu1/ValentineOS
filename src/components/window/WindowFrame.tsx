@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from "react";
 import { useSetAtom } from "jotai";
+import { motion } from "framer-motion";
 import type { WindowInstance, ResizeDirection } from "@/types/os";
 import { MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from "@/types/os";
 import {
@@ -37,6 +38,18 @@ const RESIZE_POSITIONS: Record<ResizeDirection, React.CSSProperties> = {
   nw: { top: 0, left: 0, width: RESIZE_HANDLE_SIZE * 2, height: RESIZE_HANDLE_SIZE * 2 },
   se: { bottom: 0, right: 0, width: RESIZE_HANDLE_SIZE * 2, height: RESIZE_HANDLE_SIZE * 2 },
   sw: { bottom: 0, left: 0, width: RESIZE_HANDLE_SIZE * 2, height: RESIZE_HANDLE_SIZE * 2 },
+};
+
+const windowVariants = {
+  initial: { opacity: 0, scale: 0.95, y: 20 },
+  animate: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.95, filter: "blur(10px)" },
+};
+
+const windowTransition = {
+  type: "spring" as const,
+  stiffness: 300,
+  damping: 30,
 };
 
 export function WindowFrame({ window: win }: WindowFrameProps) {
@@ -130,7 +143,13 @@ export function WindowFrame({ window: win }: WindowFrameProps) {
   }, []);
 
   return (
-    <div
+    <motion.div
+      layout={false}
+      variants={windowVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={windowTransition}
       className="absolute flex flex-col rounded-lg shadow-2xl overflow-hidden bg-white/80 backdrop-blur-xl border border-white/30"
       style={{
         left: win.position.x,
@@ -146,7 +165,7 @@ export function WindowFrame({ window: win }: WindowFrameProps) {
 
       {/* App Content */}
       <div className="flex-1 overflow-auto">
-        <AppComponent />
+        <AppComponent {...(win.props ?? {})} />
       </div>
 
       {/* Resize Handles */}
@@ -164,6 +183,6 @@ export function WindowFrame({ window: win }: WindowFrameProps) {
             onPointerUp={handleResizePointerUp}
           />
         ))}
-    </div>
+    </motion.div>
   );
 }

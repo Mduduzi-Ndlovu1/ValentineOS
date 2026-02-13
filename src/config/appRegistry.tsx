@@ -1,10 +1,10 @@
-import { FolderOpen, Settings, Globe } from "lucide-react";
+import { FolderOpen, Settings, Globe, FileText, Eye } from "lucide-react";
 import type { AppRegistryEntry, AppID } from "@/types/os";
+import { Finder } from "@/components/apps/finder/Finder";
+import { TextEditor } from "@/components/apps/TextEditor";
+import { ImageViewer } from "@/components/apps/ImageViewer";
 
-// Placeholder app components
-function FinderApp() {
-  return <div className="p-4 text-sm text-neutral">Finder — File Browser</div>;
-}
+// Placeholder app components (Settings & Browser — to be replaced later)
 
 function SettingsApp() {
   return <div className="p-4 text-sm text-neutral">Settings — System Preferences</div>;
@@ -21,7 +21,7 @@ export const APP_REGISTRY: AppRegistryEntry[] = [
     icon: FolderOpen,
     defaultSize: { width: 800, height: 500 },
     defaultPosition: { x: 100, y: 100 },
-    component: FinderApp,
+    component: Finder,
   },
   {
     id: "settings",
@@ -38,6 +38,22 @@ export const APP_REGISTRY: AppRegistryEntry[] = [
     defaultSize: { width: 900, height: 600 },
     defaultPosition: { x: 200, y: 80 },
     component: BrowserApp,
+  },
+  {
+    id: "text-editor",
+    name: "Text Editor",
+    icon: FileText,
+    defaultSize: { width: 500, height: 600 },
+    defaultPosition: { x: 180, y: 60 },
+    component: TextEditor,
+  },
+  {
+    id: "image-viewer",
+    name: "Preview",
+    icon: Eye,
+    defaultSize: { width: 600, height: 500 },
+    defaultPosition: { x: 200, y: 80 },
+    component: ImageViewer,
   },
 ];
 
