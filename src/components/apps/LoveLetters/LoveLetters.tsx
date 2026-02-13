@@ -3,10 +3,14 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { lettersAtom, loadLettersAtom } from "@/store/atoms/letters";
+import { showNotificationAtom } from "@/store/atoms/ui";
 import { LetterSidebar } from "./LetterSidebar";
 import { Stationery } from "./Stationery";
 import { createLetter, sealLetter, updateLetter } from "@/services/letterService";
+import { supabase } from "@/lib/supabase";
 import type { LoveLetter } from "@/types/letters";
+
+const CURRENT_AUTHOR = "Me";
 
 export function LoveLetters() {
   const [selectedLetterId, setSelectedLetterId] = useState<string | null>(null);
@@ -21,10 +25,60 @@ export function LoveLetters() {
 
   const letters = useAtomValue(lettersAtom);
   const loadLetters = useSetAtom(loadLettersAtom);
+  const showNotification = useSetAtom(showNotificationAtom);
 
   useEffect(() => {
     loadLetters();
   }, [loadLetters]);
+
+  // Real-time subscription for Supabase changes
+  useEffect(() => {
+    const client = supabase;
+    if (!client) return;
+
+    console.log("[LoveLetters] Setting up realtime subscription...");
+
+    const channel = client
+      .channel("realtime:letters")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "love_letters" },
+        (payload) => {
+          const newLetter = payload.new as LoveLetter;
+          console.log("[LoveLetters] INSERT received:", newLetter);
+          if (newLetter.author !== CURRENT_AUTHOR) {
+            console.log("[LoveLetters] Showing notification for new letter from:", newLetter.author);
+            showNotification(`💌 New letter from ${newLetter.author}!`);
+          }
+          loadLetters();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "love_letters" },
+        (payload) => {
+          console.log("[LoveLetters] UPDATE received:", payload);
+          loadLetters();
+        }
+      )
+      .subscribe((status) => {
+        console.log("[LoveLetters] Realtime subscription status:", status);
+        if (status === "SUBSCRIBED") {
+          console.log("[LoveLetters] Successfully subscribed to realtime");
+        }
+      });
+
+    // Fallback: poll every 5 seconds if realtime fails
+    const pollInterval = setInterval(() => {
+      console.log("[LoveLetters] Polling for updates (fallback)...");
+      loadLetters();
+    }, 5000);
+
+    return () => {
+      client.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
+  }, [loadLetters, showNotification]);
 
   const selectedLetter = letters.find((l) => l.id === selectedLetterId) ?? null;
 
@@ -103,8 +157,11 @@ export function LoveLetters() {
   }, [loadLetters]);
 
   const handleSealLetter = useCallback(async () => {
+    console.log("[LoveLetters] handleSealLetter called for:", selectedLetterId);
     if (selectedLetterId) {
+      console.log("[LoveLetters] Calling sealLetter in service...");
       await sealLetter(selectedLetterId);
+      console.log("[LoveLetters] sealLetter completed, reloading letters...");
       await loadLetters();
     }
   }, [selectedLetterId, loadLetters]);

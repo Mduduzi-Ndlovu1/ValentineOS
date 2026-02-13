@@ -49,6 +49,8 @@ export async function updateLetter(
     return null;
   }
 
+  console.log("[letterService] updateLetter called:", { id, updates });
+
   const { data, error } = await supabase
     .from("love_letters")
     .update(updates)
@@ -61,9 +63,13 @@ export async function updateLetter(
     return null;
   }
 
+  console.log("[letterService] updateLetter result:", data);
   return data;
 }
 
 export async function sealLetter(id: string): Promise<LoveLetter | null> {
-  return updateLetter(id, { is_sealed: true });
+  console.log("[letterService] sealLetter called with id:", id);
+  const result = await updateLetter(id, { is_sealed: true });
+  console.log("[letterService] sealLetter result:", result);
+  return result;
 }

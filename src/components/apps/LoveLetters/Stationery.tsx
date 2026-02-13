@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Lock, Heart } from "lucide-react";
 import type { LoveLetter } from "@/types/letters";
 import { LetterEditor } from "./LetterEditor";
@@ -94,9 +95,13 @@ export function Stationery({ letter, editable, onUpdateContent, onUpdateTitle, o
 
       {/* Wax Seal Badge (if sealed) */}
       {letter.is_sealed && (
-        <div className="absolute bottom-8 right-8 w-16 h-16 rounded-full bg-[#c41e3a] shadow-lg flex items-center justify-center">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute bottom-8 right-8 w-16 h-16 rounded-full bg-[#c41e3a] shadow-lg flex items-center justify-center"
+        >
           <Heart className="w-8 h-8 text-white" fill="white" />
-        </div>
+        </motion.div>
       )}
     </div>
   );

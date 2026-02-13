@@ -12,6 +12,7 @@ import {
 import { DesktopIcon } from "./DesktopIcon";
 import { Dock } from "@/components/dock/Dock";
 import { WindowManager } from "@/components/window/WindowManager";
+import { Toast } from "@/components/ui/Toast";
 
 function BootScreen({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
@@ -102,6 +103,9 @@ export function Desktop() {
 
       {/* Window Manager */}
       <WindowManager />
+
+      {/* Toast Notifications */}
+      <Toast />
 
       {/* Dock — slides up after boot */}
       <motion.div
