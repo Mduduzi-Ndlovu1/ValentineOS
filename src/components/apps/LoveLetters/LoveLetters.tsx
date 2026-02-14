@@ -4,81 +4,31 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { lettersAtom, loadLettersAtom } from "@/store/atoms/letters";
 import { showNotificationAtom } from "@/store/atoms/ui";
+import { currentUserAtom } from "@/store/atoms/user";
+import { markAsOurs } from "@/lib/session";
 import { LetterSidebar } from "./LetterSidebar";
 import { Stationery } from "./Stationery";
-import { createLetter, sealLetter, updateLetter } from "@/services/letterService";
-import { supabase } from "@/lib/supabase";
-import type { LoveLetter } from "@/types/letters";
+import { createLetter, sealLetter, updateLetter, deleteLetter } from "@/services/letterService";
 
-const CURRENT_AUTHOR = "Me";
+import type { WindowAppProps } from "@/types/os";
 
-export function LoveLetters() {
-  const [selectedLetterId, setSelectedLetterId] = useState<string | null>(null);
+export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
+  const [selectedLetterId, setSelectedLetterId] = useState<string | null>(initialLetterId ?? null);
   const [editedContent, setEditedContent] = useState<string>("");
   const [editedTitle, setEditedTitle] = useState<string>("");
-  const [editedAuthor, setEditedAuthor] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const contentSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const titleSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const authorSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const letters = useAtomValue(lettersAtom);
   const loadLetters = useSetAtom(loadLettersAtom);
   const showNotification = useSetAtom(showNotificationAtom);
+  const currentUser = useAtomValue(currentUserAtom);
 
   useEffect(() => {
     loadLetters();
   }, [loadLetters]);
-
-  // Real-time subscription for Supabase changes
-  useEffect(() => {
-    const client = supabase;
-    if (!client) return;
-
-    console.log("[LoveLetters] Setting up realtime subscription...");
-
-    const channel = client
-      .channel("realtime:letters")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "love_letters" },
-        (payload) => {
-          const newLetter = payload.new as LoveLetter;
-          console.log("[LoveLetters] INSERT received:", newLetter);
-          if (newLetter.author !== CURRENT_AUTHOR) {
-            console.log("[LoveLetters] Showing notification for new letter from:", newLetter.author);
-            showNotification(`💌 New letter from ${newLetter.author}!`);
-          }
-          loadLetters();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "love_letters" },
-        (payload) => {
-          console.log("[LoveLetters] UPDATE received:", payload);
-          loadLetters();
-        }
-      )
-      .subscribe((status) => {
-        console.log("[LoveLetters] Realtime subscription status:", status);
-        if (status === "SUBSCRIBED") {
-          console.log("[LoveLetters] Successfully subscribed to realtime");
-        }
-      });
-
-    // Fallback: poll every 5 seconds if realtime fails
-    const pollInterval = setInterval(() => {
-      console.log("[LoveLetters] Polling for updates (fallback)...");
-      loadLetters();
-    }, 5000);
-
-    return () => {
-      client.removeChannel(channel);
-      clearInterval(pollInterval);
-    };
-  }, [loadLetters, showNotification]);
 
   const selectedLetter = letters.find((l) => l.id === selectedLetterId) ?? null;
 
@@ -86,7 +36,6 @@ export function LoveLetters() {
     if (selectedLetter) {
       setEditedContent(selectedLetter.content);
       setEditedTitle(selectedLetter.title);
-      setEditedAuthor(selectedLetter.author);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLetter?.id]);
@@ -103,10 +52,11 @@ export function LoveLetters() {
 
     contentSaveTimeoutRef.current = setTimeout(async () => {
       if (selectedLetterId) {
+        markAsOurs(selectedLetterId);
         await updateLetter(selectedLetterId, { content: newContent });
         setIsSaving(false);
         setShowSavedIndicator(true);
-        
+
         setTimeout(() => setShowSavedIndicator(false), 2000);
       }
     }, 2000);
@@ -121,21 +71,8 @@ export function LoveLetters() {
 
     titleSaveTimeoutRef.current = setTimeout(async () => {
       if (selectedLetterId) {
+        markAsOurs(selectedLetterId);
         await updateLetter(selectedLetterId, { title: newTitle });
-      }
-    }, 500);
-  }, [selectedLetterId]);
-
-  const handleAuthorUpdate = useCallback((newAuthor: string) => {
-    setEditedAuthor(newAuthor);
-
-    if (authorSaveTimeoutRef.current) {
-      clearTimeout(authorSaveTimeoutRef.current);
-    }
-
-    authorSaveTimeoutRef.current = setTimeout(async () => {
-      if (selectedLetterId) {
-        await updateLetter(selectedLetterId, { author: newAuthor });
       }
     }, 500);
   }, [selectedLetterId]);
@@ -145,50 +82,80 @@ export function LoveLetters() {
   const handleCreateLetter = useCallback(async () => {
     const newLetter = await createLetter({
       title: "Untitled",
-      author: "Me",
+      author: currentUser ?? "Anonymous",
       content: "<p></p>",
       is_sealed: false,
       theme: "valentine",
     });
     if (newLetter) {
+      markAsOurs(newLetter.id);
       await loadLetters();
       setSelectedLetterId(newLetter.id);
     }
-  }, [loadLetters]);
+  }, [loadLetters, currentUser]);
 
   const handleSealLetter = useCallback(async () => {
-    console.log("[LoveLetters] handleSealLetter called for:", selectedLetterId);
     if (selectedLetterId) {
-      console.log("[LoveLetters] Calling sealLetter in service...");
+      markAsOurs(selectedLetterId);
       await sealLetter(selectedLetterId);
-      console.log("[LoveLetters] sealLetter completed, reloading letters...");
       await loadLetters();
+      showNotification({
+        message: "Letter sealed with love",
+        type: "success",
+        icon: "heart",
+        source: "Love Letters",
+      });
     }
-  }, [selectedLetterId, loadLetters]);
+  }, [selectedLetterId, loadLetters, showNotification]);
 
   const handleSaveLetter = useCallback(async () => {
     if (selectedLetterId && contentSaveTimeoutRef.current) {
       clearTimeout(contentSaveTimeoutRef.current);
     }
     if (selectedLetterId) {
-      await updateLetter(selectedLetterId, { content: editedContent, title: editedTitle, author: editedAuthor });
-      await sealLetter(selectedLetterId);
+      markAsOurs(selectedLetterId);
+      await updateLetter(selectedLetterId, { content: editedContent, title: editedTitle });
       await loadLetters();
+      showNotification({
+        message: "Letter saved",
+        type: "success",
+        icon: "check",
+        source: "Love Letters",
+      });
     }
-  }, [selectedLetterId, editedContent, editedTitle, editedAuthor, loadLetters]);
+  }, [selectedLetterId, editedContent, editedTitle, loadLetters, showNotification]);
+
+  const handleDeleteLetter = useCallback(async (letterId: string) => {
+    if (confirm("Are you sure you want to delete this letter? This cannot be undone.")) {
+      await deleteLetter(letterId);
+      if (selectedLetterId === letterId) {
+        setSelectedLetterId(null);
+      }
+      await loadLetters();
+      showNotification({
+        message: "Letter deleted",
+        type: "success",
+        icon: "trash",
+        source: "Love Letters",
+      });
+    }
+  }, [selectedLetterId, loadLetters, showNotification]);
 
   return (
-    <div className="flex h-full bg-[#f3e5dc]">
+    <div className="flex flex-col md:flex-row h-full bg-[#f3e5dc]">
       {/* Sidebar */}
-      <LetterSidebar
-        letters={letters}
-        selectedLetterId={selectedLetterId}
-        onSelectLetter={setSelectedLetterId}
-        onCreateLetter={handleCreateLetter}
-      />
+      <div className="w-full md:w-64 h-48 md:h-full bg-white/40 backdrop-blur-md border-b md:border-b-0 md:border-r border-white/30 flex-shrink-0">
+        <LetterSidebar
+          letters={letters}
+          selectedLetterId={selectedLetterId}
+          onSelectLetter={setSelectedLetterId}
+          onCreateLetter={handleCreateLetter}
+          onDeleteLetter={handleDeleteLetter}
+        />
+      </div>
 
       {/* Main Stage - Desk/Wood background */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#8b5a2b] to-[#5c3a1e]">
+      <div className="flex-1 flex flex-col items-center justify-center p-2 md:p-8 bg-gradient-to-br from-[#8b5a2b] to-[#5c3a1e] overflow-auto">
         {selectedLetter ? (
           <>
             {/* Save Indicator */}
@@ -204,24 +171,22 @@ export function LoveLetters() {
                 </span>
               )}
             </div>
-            <Stationery 
-              letter={{ 
-                ...selectedLetter, 
+            <Stationery
+              letter={{
+                ...selectedLetter,
                 content: editedContent,
                 title: editedTitle,
-                author: editedAuthor
               }}
               editable={isEditable}
               onUpdateContent={handleContentUpdate}
               onUpdateTitle={handleTitleUpdate}
-              onUpdateAuthor={handleAuthorUpdate}
               onSeal={handleSealLetter}
               onSave={handleSaveLetter}
             />
           </>
         ) : (
           <div className="text-center text-white/60">
-            <p 
+            <p
               className="text-3xl mb-2"
               style={{ fontFamily: "var(--font-dancing-script)" }}
             >

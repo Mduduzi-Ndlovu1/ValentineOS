@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -12,6 +13,8 @@ interface LetterEditorProps {
 }
 
 export function LetterEditor({ content, editable, onUpdate }: LetterEditorProps) {
+  const isUpdatingRef = useRef(false);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -23,8 +26,10 @@ export function LetterEditor({ content, editable, onUpdate }: LetterEditorProps)
     ],
     content,
     editable,
-    onUpdate: ({ editor }) => {
-      onUpdate(editor.getHTML());
+    onUpdate: ({ editor: e }) => {
+      if (!isUpdatingRef.current) {
+        onUpdate(e.getHTML());
+      }
     },
     editorProps: {
       attributes: {
@@ -32,6 +37,22 @@ export function LetterEditor({ content, editable, onUpdate }: LetterEditorProps)
       },
     },
   });
+
+  // Sync content prop → editor when it changes externally
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      isUpdatingRef.current = true;
+      editor.commands.setContent(content, { emitUpdate: false });
+      isUpdatingRef.current = false;
+    }
+  }, [editor, content]);
+
+  // Sync editable prop
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(editable);
+    }
+  }, [editor, editable]);
 
   if (!editor) {
     return null;

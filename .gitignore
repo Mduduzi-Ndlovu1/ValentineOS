@@ -19,6 +19,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # env files
+.env
 .env*.local
 
 # IDE
@@ -35,3 +36,5 @@ nul
 # misc
 .claude/
 next-env.d.ts
+
+.vercel

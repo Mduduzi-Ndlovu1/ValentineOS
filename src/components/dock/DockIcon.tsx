@@ -22,9 +22,9 @@ interface DockIconProps {
   mouseX: MotionValue<number>;
 }
 
-const BASE_SIZE = 48;
-const MAX_SIZE = 80;
-const DISTANCE = 150;
+const BASE_SIZE = 40;
+const MAX_SIZE = 56;
+const DISTANCE = 100;
 
 export function DockIcon({ app, mouseX }: DockIconProps) {
   const ref = useRef<HTMLDivElement>(null);

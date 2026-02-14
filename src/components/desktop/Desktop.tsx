@@ -13,6 +13,9 @@ import { DesktopIcon } from "./DesktopIcon";
 import { Dock } from "@/components/dock/Dock";
 import { WindowManager } from "@/components/window/WindowManager";
 import { Toast } from "@/components/ui/Toast";
+import { MenuBar } from "@/components/ui/MenuBar";
+import { NotificationCenter } from "@/components/ui/NotificationCenter";
+import { useGlobalRealtime } from "@/hooks/useGlobalRealtime";
 
 function BootScreen({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
@@ -48,6 +51,8 @@ function BootScreen({ onComplete }: { onComplete: () => void }) {
 }
 
 export function Desktop() {
+  useGlobalRealtime();
+
   const wallpaper = useAtomValue(wallpaperAtom);
   const fallback = useAtomValue(wallpaperFallbackAtom);
   const icons = useAtomValue(desktopIconsAtom);
@@ -104,8 +109,14 @@ export function Desktop() {
       {/* Window Manager */}
       <WindowManager />
 
+      {/* Menu Bar */}
+      <MenuBar />
+
       {/* Toast Notifications */}
       <Toast />
+
+      {/* Notification Center */}
+      <NotificationCenter />
 
       {/* Dock — slides up after boot */}
       <motion.div

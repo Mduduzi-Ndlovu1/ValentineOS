@@ -156,6 +156,10 @@ export function WindowFrame({ window: win }: WindowFrameProps) {
         top: win.position.y,
         width: win.size.width,
         height: win.size.height,
+        minWidth: Math.min(MIN_WINDOW_WIDTH, window.innerWidth - 20),
+        minHeight: Math.min(MIN_WINDOW_HEIGHT, window.innerHeight - 100),
+        maxWidth: "calc(100vw - 20px)",
+        maxHeight: "calc(100vh - 120px)",
         zIndex: win.zIndex,
       }}
       onPointerDown={() => focusWindow(win.id)}

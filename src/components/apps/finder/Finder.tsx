@@ -113,10 +113,10 @@ export function Finder() {
   }, []);
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex flex-col md:flex-row h-full overflow-hidden">
       {/* ─── Sidebar ─── */}
-      <div className="w-48 bg-base-200/50 backdrop-blur-md border-r border-base-300 flex flex-col p-2 gap-1 shrink-0">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-2 pt-1 pb-1">
+      <div className="w-full md:w-48 bg-base-200/50 backdrop-blur-md border-b md:border-b-0 md:border-r border-base-300 flex flex-col p-2 gap-1 shrink-0 order-2 md:order-1">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-2 pt-1 pb-1 hidden md:block">
           Favorites
         </span>
         {SIDEBAR_ITEMS.map(({ id, label, icon: Icon }) => (
@@ -128,12 +128,12 @@ export function Finder() {
             }`}
           >
             <Icon className="w-4 h-4 opacity-60" />
-            {label}
+            <span className="hidden md:inline">{label}</span>
           </button>
         ))}
-        <div className="border-t border-base-300 my-1" />
+        <div className="border-t border-base-300 my-1 hidden md:block" />
         <button
-          className="btn btn-ghost btn-sm justify-start font-normal text-gray-400 gap-2 cursor-not-allowed"
+          className="btn btn-ghost btn-sm justify-start font-normal text-gray-400 gap-2 cursor-not-allowed hidden md:flex"
           disabled
         >
           <Trash2 className="w-4 h-4 opacity-40" />
@@ -142,14 +142,14 @@ export function Finder() {
       </div>
 
       {/* ─── Main Content Area ─── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 order-1 md:order-2">
         {/* ─── Top Bar ─── */}
-        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-base-300 bg-base-100/50 shrink-0">
+        <div className="flex items-center gap-1 md:gap-2 px-1 md:px-3 py-1.5 border-b border-base-300 bg-base-100/50 shrink-0 overflow-x-auto">
           {/* Back / Forward */}
           <button
             onClick={goBack}
             disabled={!canGoBack}
-            className="btn btn-ghost btn-xs btn-circle"
+            className="btn btn-ghost btn-xs btn-circle shrink-0"
           >
             <ChevronLeft
               className={`w-4 h-4 ${canGoBack ? "text-gray-700" : "text-gray-300"}`}
@@ -158,7 +158,7 @@ export function Finder() {
           <button
             onClick={goForward}
             disabled={!canGoForward}
-            className="btn btn-ghost btn-xs btn-circle"
+            className="btn btn-ghost btn-xs btn-circle shrink-0"
           >
             <ChevronRight
               className={`w-4 h-4 ${canGoForward ? "text-gray-700" : "text-gray-300"}`}
@@ -166,7 +166,7 @@ export function Finder() {
           </button>
 
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-1 text-xs text-gray-500 overflow-hidden ml-1">
+          <div className="flex items-center gap-1 text-xs text-gray-500 overflow-hidden ml-1 min-w-0">
             {breadcrumbs.map((crumb, i) => (
               <span key={crumb.id} className="flex items-center gap-1 shrink-0">
                 {i > 0 && <span className="text-gray-300">/</span>}
@@ -187,7 +187,7 @@ export function Finder() {
 
         {/* ─── Grid View ─── */}
         <div
-          className="flex-1 bg-white/90 p-4 overflow-y-auto"
+          className="flex-1 bg-white/90 p-2 md:p-4 overflow-y-auto"
           onClick={handleMainAreaClick}
         >
           {contents.length === 0 ? (
@@ -195,7 +195,7 @@ export function Finder() {
               This folder is empty
             </div>
           ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(70px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2 md:gap-4">
               {contents.map((item) => (
                 <FileIcon
                   key={item.id}
@@ -226,7 +226,7 @@ function FileIcon({ item, isSelected, onClick, onDoubleClick }: FileIconProps) {
 
   return (
     <div
-      className={`flex flex-col items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+      className={`flex flex-col items-center gap-1 md:gap-2 p-1 md:p-2 rounded cursor-pointer transition-colors ${
         isSelected
           ? "bg-blue-500/20 ring-1 ring-blue-500"
           : "hover:bg-blue-500/10"
@@ -241,12 +241,12 @@ function FileIcon({ item, isSelected, onClick, onDoubleClick }: FileIconProps) {
       }}
     >
       <Icon
-        className={`w-12 h-12 ${
+        className={`w-8 h-8 md:w-12 md:h-12 ${
           item.type === "folder" ? "text-blue-400" : "text-gray-400"
         }`}
         strokeWidth={1.2}
       />
-      <span className="text-xs text-center truncate w-full px-1">
+      <span className="text-[10px] md:text-xs text-center truncate w-full px-0.5 md:px-1">
         {item.name}
       </span>
     </div>

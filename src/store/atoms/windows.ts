@@ -98,11 +98,11 @@ export const maximizeWindowAtom = atom(null, (get, set, windowId: string) => {
         ...w,
         isMaximized: true,
         preMaximizeRect: { position: w.position, size: w.size },
-        position: { x: 0, y: 0 },
+        position: { x: 0, y: 28 },
         size: {
           width: typeof window !== "undefined" ? window.innerWidth : 1280,
           height:
-            (typeof window !== "undefined" ? window.innerHeight : 720) - 80,
+            (typeof window !== "undefined" ? window.innerHeight : 720) - 108,
         },
       };
     })

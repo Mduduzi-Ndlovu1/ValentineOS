@@ -73,3 +73,22 @@ export async function sealLetter(id: string): Promise<LoveLetter | null> {
   console.log("[letterService] sealLetter result:", result);
   return result;
 }
+
+export async function deleteLetter(id: string): Promise<boolean> {
+  if (!supabase) {
+    console.error("[letterService] Supabase client not initialized");
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("love_letters")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("[letterService] Error deleting letter:", error.message);
+    return false;
+  }
+
+  return true;
+}
