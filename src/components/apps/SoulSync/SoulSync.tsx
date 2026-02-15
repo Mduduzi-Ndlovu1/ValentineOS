@@ -117,6 +117,18 @@ export function SoulSync(_props: WindowAppProps) {
     status: "disconnected",
   };
 
+  // Check Spotify config on mount
+  useEffect(() => {
+    fetch("/api/auth/spotify/status")
+      .then((res) => res.json())
+      .then((statusData) => {
+        setSpotifyConfigured(statusData.configured);
+      })
+      .catch(() => {
+        setSpotifyConfigured(false);
+      });
+  }, []);
+
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e] overflow-hidden">
       {/* Header */}
