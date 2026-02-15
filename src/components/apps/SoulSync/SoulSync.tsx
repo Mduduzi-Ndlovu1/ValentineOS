@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Music, Heart, WifiOff, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { showNotificationAtom } from "@/store/atoms/ui";
 import {
@@ -95,6 +95,123 @@ function PlayerCard({
           <p className="text-white/40 text-sm">Nothing playing</p>
         </>
       )}
+    </div>
+  );
+}
+
+// ─── Sync Heart ───
+// States: neither connected → empty outline, left only → left half filled,
+// right only → right half filled, both → full red fill + pulse + ripples
+function SyncHeart({
+  adminConnected,
+  neoConnected,
+  isResonating,
+}: {
+  adminConnected: boolean;
+  neoConnected: boolean;
+  isResonating: boolean;
+}) {
+  const bothConnected = adminConnected && neoConnected;
+  const neitherConnected = !adminConnected && !neoConnected;
+
+  return (
+    <div className="flex items-center justify-center px-2 shrink-0">
+      <div className="relative w-12 h-12">
+        {/* Ripple rings — only when both connected */}
+        {bothConnected && (
+          <>
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="absolute inset-0 flex items-center justify-center"
+                initial={{ scale: 1, opacity: 0.6 }}
+                animate={{ scale: [1, 2.2], opacity: [0.5, 0] }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: i * 0.6,
+                  ease: "easeOut",
+                }}
+              >
+                <Heart className="w-10 h-10 text-pink-400" strokeWidth={1} />
+              </motion.div>
+            ))}
+          </>
+        )}
+
+        {/* Main heart container */}
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center"
+          animate={
+            bothConnected
+              ? { scale: [1, 1.15, 1] }
+              : {}
+          }
+          transition={
+            bothConnected
+              ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+              : undefined
+          }
+        >
+          {/* Base outline heart (always visible) */}
+          <Heart
+            className={`w-10 h-10 absolute transition-colors duration-700 ${
+              neitherConnected
+                ? "text-white/15"
+                : bothConnected
+                  ? "text-rose-500"
+                  : "text-pink-400/50"
+            }`}
+            strokeWidth={1.5}
+          />
+
+          {/* Half-fill: admin side (left) */}
+          {adminConnected && !bothConnected && (
+            <div
+              className="absolute inset-0 flex items-center justify-center overflow-hidden"
+              style={{ clipPath: "inset(0 50% 0 0)" }}
+            >
+              <Heart
+                className="w-10 h-10 text-rose-500 fill-rose-500"
+                strokeWidth={1.5}
+              />
+            </div>
+          )}
+
+          {/* Half-fill: neo side (right) */}
+          {neoConnected && !bothConnected && (
+            <div
+              className="absolute inset-0 flex items-center justify-center overflow-hidden"
+              style={{ clipPath: "inset(0 0 0 50%)" }}
+            >
+              <Heart
+                className="w-10 h-10 text-rose-500 fill-rose-500"
+                strokeWidth={1.5}
+              />
+            </div>
+          )}
+
+          {/* Full fill: both connected */}
+          <AnimatePresence>
+            {bothConnected && (
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Heart
+                  className={`w-10 h-10 fill-rose-500 transition-colors duration-500 ${
+                    isResonating ? "text-pink-300" : "text-rose-500"
+                  }`}
+                  strokeWidth={1.5}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
     </div>
   );
 }
@@ -222,36 +339,12 @@ export function SoulSync(_props: WindowAppProps) {
             isResonating={data?.isResonating ?? false}
           />
 
-          {/* Center resonance heart */}
-          <div className="flex items-center justify-center px-2 shrink-0">
-            <motion.div
-              animate={
-                data?.isResonating
-                  ? {
-                      scale: [1, 1.3, 1],
-                      filter: [
-                        "drop-shadow(0 0 0px #f472b6)",
-                        "drop-shadow(0 0 20px #f472b6)",
-                        "drop-shadow(0 0 0px #f472b6)",
-                      ],
-                    }
-                  : {}
-              }
-              transition={
-                data?.isResonating
-                  ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" }
-                  : undefined
-              }
-            >
-              <Heart
-                className={`w-8 h-8 transition-colors duration-500 ${
-                  data?.isResonating
-                    ? "text-pink-400 fill-pink-400"
-                    : "text-white/15"
-                }`}
-              />
-            </motion.div>
-          </div>
+          {/* Center sync heart */}
+          <SyncHeart
+            adminConnected={adminStatus.status !== "disconnected"}
+            neoConnected={neoStatus.status !== "disconnected"}
+            isResonating={data?.isResonating ?? false}
+          />
 
           {/* Neo card */}
           <PlayerCard
