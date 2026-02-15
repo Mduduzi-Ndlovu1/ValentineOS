@@ -1,16 +1,14 @@
-import { FolderOpen, Settings, Globe, FileText, Eye, Heart, Sparkles } from "lucide-react";
+import { FolderOpen, Settings, Globe, FileText, Eye, Heart, Sparkles, Music } from "lucide-react";
 import type { AppRegistryEntry, AppID } from "@/types/os";
 import { Finder } from "@/components/apps/finder/Finder";
 import { TextEditor } from "@/components/apps/TextEditor";
 import { ImageViewer } from "@/components/apps/ImageViewer";
 import { LoveLetters } from "@/components/apps/LoveLetters/LoveLetters";
 import { PatchNotes } from "@/components/apps/PatchNotes";
+import { SettingsApp } from "@/components/apps/Settings";
+import { SoulSync } from "@/components/apps/SoulSync/SoulSync";
 
-// Placeholder app components (Settings & Browser — to be replaced later)
-
-function SettingsApp() {
-  return <div className="p-4 text-sm text-neutral">Settings — System Preferences</div>;
-}
+// Placeholder app components (Browser — to be replaced later)
 
 function BrowserApp() {
   return <div className="p-4 text-sm text-neutral">Browser — Web Browser</div>;
@@ -29,8 +27,8 @@ export const APP_REGISTRY: AppRegistryEntry[] = [
     id: "settings",
     name: "Settings",
     icon: Settings,
-    defaultSize: { width: 600, height: 450 },
-    defaultPosition: { x: 150, y: 120 },
+    defaultSize: { width: 650, height: 500 },
+    defaultPosition: { x: 150, y: 80 },
     component: SettingsApp,
   },
   {
@@ -72,6 +70,14 @@ export const APP_REGISTRY: AppRegistryEntry[] = [
     defaultSize: { width: 550, height: 600 },
     defaultPosition: { x: 300, y: 100 },
     component: PatchNotes,
+  },
+  {
+    id: "soul-sync",
+    name: "Soul Sync",
+    icon: Music,
+    defaultSize: { width: 700, height: 450 },
+    defaultPosition: { x: 200, y: 100 },
+    component: SoulSync,
   },
 ];
 

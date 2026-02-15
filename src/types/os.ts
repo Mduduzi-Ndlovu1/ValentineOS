@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
 
 // ─── App Identity ───
-export type AppID = "finder" | "settings" | "browser" | "text-editor" | "image-viewer" | "love-letters" | "patch-notes";
+export type AppID = "finder" | "settings" | "browser" | "text-editor" | "image-viewer" | "love-letters" | "patch-notes" | "soul-sync";
 
 // ─── Window Geometry ───
 export interface WindowPosition {

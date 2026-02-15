@@ -12,6 +12,7 @@ import {
 import { getAppEntry } from "@/config/appRegistry";
 import { WindowTitleBar } from "./WindowTitleBar";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 interface WindowFrameProps {
   window: WindowInstance;
@@ -183,7 +184,9 @@ export function WindowFrame({ window: win }: WindowFrameProps) {
 
       {/* App Content */}
       <div className="flex-1 overflow-auto">
-        <AppComponent {...(win.props ?? {})} />
+        <ErrorBoundary>
+          <AppComponent {...(win.props ?? {})} />
+        </ErrorBoundary>
       </div>
 
       {/* Resize Handles — desktop only */}

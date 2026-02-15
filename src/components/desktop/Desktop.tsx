@@ -1,6 +1,6 @@
 "use client";
 
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart } from "lucide-react";
@@ -17,6 +17,7 @@ import { Toast } from "@/components/ui/Toast";
 import { MenuBar } from "@/components/ui/MenuBar";
 import { NotificationCenter } from "@/components/ui/NotificationCenter";
 import { useGlobalRealtime } from "@/hooks/useGlobalRealtime";
+import { showNotificationAtom } from "@/store/atoms/ui";
 
 function BootScreen({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
@@ -62,6 +63,32 @@ export function Desktop() {
   const [isBooting, setIsBooting] = useState(true);
   const desktopRef = useRef<HTMLDivElement>(null!);
 
+  const showNotification = useSetAtom(showNotificationAtom);
+
+  // Handle Spotify OAuth redirect query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connected") === "true") {
+      showNotification({
+        message: "Spotify connected successfully!",
+        type: "success",
+        icon: "heart",
+        source: "Soul Sync",
+      });
+      window.history.replaceState({}, "", "/");
+    }
+    const spotifyError = params.get("spotify_error");
+    if (spotifyError) {
+      showNotification({
+        message: `Spotify connection failed: ${spotifyError}`,
+        type: "error",
+        icon: "alert",
+        source: "Soul Sync",
+      });
+      window.history.replaceState({}, "", "/");
+    }
+  }, [showNotification]);
+
   const handleImageError = useCallback(() => {
     setUseFallback(true);
   }, []);
@@ -74,12 +101,16 @@ export function Desktop() {
     <div
       ref={desktopRef}
       className="relative w-dvw h-dvh overflow-hidden select-none"
-      style={{
-        background: useFallback ? fallback : wallpaper,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
+      style={
+        useFallback
+          ? { background: fallback }
+          : {
+              backgroundImage: wallpaper,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }
+      }
     >
       {/* Preload wallpaper to detect errors */}
       {!useFallback && wallpaper.startsWith("url(") && (
