@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 
-export async function GET() {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+export const dynamic = "force-dynamic";
 
-  const configured = !!(clientId && clientSecret && baseUrl);
+export async function GET() {
+  const configured = !!(
+    process.env.SPOTIFY_CLIENT_ID &&
+    process.env.SPOTIFY_CLIENT_SECRET &&
+    process.env.NEXT_PUBLIC_BASE_URL
+  );
 
   return NextResponse.json({ configured });
 }
