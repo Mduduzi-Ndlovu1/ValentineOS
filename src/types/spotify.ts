@@ -26,4 +26,6 @@ export interface UserPlaybackStatus {
 // ─── Full API response from /api/soul-sync ───
 export interface SoulSyncResponse {
   admin: UserPlaybackStatus;
+  neo: UserPlaybackStatus;
+  isResonating: boolean;
 }

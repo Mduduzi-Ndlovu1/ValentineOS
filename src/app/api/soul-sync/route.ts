@@ -123,14 +123,34 @@ export async function GET() {
     status: "disconnected",
   };
 
-  const adminToken = await getRefreshToken("admin");
+  // Fetch both tokens in parallel
+  const [adminToken, neoToken] = await Promise.all([
+    getRefreshToken("admin"),
+    getRefreshToken("neo"),
+  ]);
 
-  const adminStatus = adminToken
-    ? await getSpotifyStatus(adminToken, "admin")
-    : disconnected;
+  // Fetch both playback statuses in parallel
+  const [adminStatus, neoStatus] = await Promise.all([
+    adminToken
+      ? getSpotifyStatus(adminToken, "admin")
+      : Promise.resolve(disconnected),
+    neoToken
+      ? getSpotifyStatus(neoToken, "neo")
+      : Promise.resolve(disconnected),
+  ]);
+
+  // Resonance: both playing the same track
+  const isResonating =
+    adminStatus.isPlaying &&
+    neoStatus.isPlaying &&
+    !!adminStatus.track &&
+    !!neoStatus.track &&
+    adminStatus.track.trackUri === neoStatus.track.trackUri;
 
   const body: SoulSyncResponse = {
     admin: adminStatus,
+    neo: neoStatus,
+    isResonating,
   };
 
   return NextResponse.json(body, {

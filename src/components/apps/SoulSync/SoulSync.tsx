@@ -3,6 +3,9 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Music, Heart, WifiOff, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { showNotificationAtom } from "@/store/atoms/ui";
 import {
   soulSyncDataAtom,
   soulSyncLoadingAtom,
@@ -18,10 +21,12 @@ function PlayerCard({
   label,
   userAlias,
   status,
+  isResonating,
 }: {
   label: string;
   userAlias: "admin" | "neo";
   status: UserPlaybackStatus;
+  isResonating: boolean;
 }) {
   const handleConnect = useCallback(() => {
     window.location.href = `/api/auth/spotify/login?user=${userAlias}`;
@@ -48,7 +53,7 @@ function PlayerCard({
 
   // Playing / Paused / Idle
   return (
-    <div className="flex-1 flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/5 backdrop-blur-sm transition-all duration-500 min-w-[260px]">
+    <div className={`flex-1 flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/5 backdrop-blur-sm transition-all duration-500 min-w-[260px] ${isResonating ? "ring-2 ring-pink-400 shadow-[0_0_25px_rgba(244,114,182,0.4)]" : ""}`}>
       <span className="text-xs uppercase tracking-wider text-white/40">
         {label}
       </span>
@@ -96,10 +101,13 @@ function PlayerCard({
 
 // ─── Main Soul Sync Component ───
 export function SoulSync(_props: WindowAppProps) {
+  const isMobile = useIsMobile();
   const data = useAtomValue(soulSyncDataAtom);
   const isLoading = useAtomValue(soulSyncLoadingAtom);
   const fetchData = useSetAtom(fetchSoulSyncAtom);
+  const showNotification = useSetAtom(showNotificationAtom);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevResonating = useRef(false);
   const [spotifyConfigured, setSpotifyConfigured] = useState<boolean | null>(null);
 
   // Initial fetch + polling
@@ -111,7 +119,26 @@ export function SoulSync(_props: WindowAppProps) {
     };
   }, [fetchData]);
 
+  // Resonance notification (fire once per resonance start)
+  useEffect(() => {
+    if (data?.isResonating && !prevResonating.current) {
+      showNotification({
+        message: "Your souls are in sync!",
+        type: "success",
+        icon: "heart",
+        source: "Soul Sync",
+      });
+    }
+    prevResonating.current = data?.isResonating ?? false;
+  }, [data?.isResonating, showNotification]);
+
   const adminStatus: UserPlaybackStatus = data?.admin ?? {
+    isPlaying: false,
+    track: null,
+    status: "disconnected",
+  };
+
+  const neoStatus: UserPlaybackStatus = data?.neo ?? {
     isPlaying: false,
     track: null,
     status: "disconnected",
@@ -183,25 +210,64 @@ export function SoulSync(_props: WindowAppProps) {
         </div>
       ) : (
         <div
-          className="flex-1 flex items-center justify-center gap-4 p-4 overflow-y-auto"
+          className={`flex-1 flex items-center justify-center gap-4 p-4 overflow-y-auto ${
+            isMobile ? "flex-col" : "flex-row"
+          }`}
         >
           {/* Admin card */}
           <PlayerCard
             label="Mduduzi"
             userAlias="admin"
             status={adminStatus}
+            isResonating={data?.isResonating ?? false}
           />
 
-          {/* Center heart */}
+          {/* Center resonance heart */}
           <div className="flex items-center justify-center px-2 shrink-0">
-            <Heart className="w-8 h-8 text-white/15" />
+            <motion.div
+              animate={
+                data?.isResonating
+                  ? {
+                      scale: [1, 1.3, 1],
+                      filter: [
+                        "drop-shadow(0 0 0px #f472b6)",
+                        "drop-shadow(0 0 20px #f472b6)",
+                        "drop-shadow(0 0 0px #f472b6)",
+                      ],
+                    }
+                  : {}
+              }
+              transition={
+                data?.isResonating
+                  ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" }
+                  : undefined
+              }
+            >
+              <Heart
+                className={`w-8 h-8 transition-colors duration-500 ${
+                  data?.isResonating
+                    ? "text-pink-400 fill-pink-400"
+                    : "text-white/15"
+                }`}
+              />
+            </motion.div>
           </div>
+
+          {/* Neo card */}
+          <PlayerCard
+            label="Neo"
+            userAlias="neo"
+            status={neoStatus}
+            isResonating={data?.isResonating ?? false}
+          />
         </div>
       )}
 
       {/* Footer status */}
       <div className="px-4 py-2 text-center text-[10px] uppercase tracking-wider text-white/20 border-t border-white/5 shrink-0">
-        {adminStatus.status === "playing" ? "Playing" : adminStatus.status === "paused" ? "Paused" : `Polling every ${POLL_INTERVAL / 1000}s`}
+        {data?.isResonating
+          ? "Resonating \u2728"
+          : `Polling every ${POLL_INTERVAL / 1000}s`}
       </div>
     </div>
   );
