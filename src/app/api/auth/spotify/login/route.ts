@@ -7,7 +7,11 @@ export async function GET(request: NextRequest) {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
+  console.log("[spotify/login] clientId:", clientId ? "exists" : "MISSING");
+  console.log("[spotify/login] baseUrl:", baseUrl);
+
   if (!clientId || !baseUrl) {
+    console.log("[spotify/login] ERROR: Missing config, redirecting to home");
     const redirectUrl = baseUrl ? `${baseUrl}/` : "/";
     return NextResponse.redirect(`${redirectUrl}?spotify_error=not_configured`);
   }
@@ -15,6 +19,8 @@ export async function GET(request: NextRequest) {
   // Determine which user is connecting (admin or neo)
   const userAlias =
     request.nextUrl.searchParams.get("user") === "admin" ? "admin" : "neo";
+
+  console.log("[spotify/login] userAlias:", userAlias);
 
   // Generate CSRF state token
   const state = crypto.randomUUID();
@@ -39,6 +45,8 @@ export async function GET(request: NextRequest) {
   const scopes = "user-read-currently-playing user-read-playback-state";
   const redirectUri = `${baseUrl}/api/auth/spotify/callback`;
 
+  console.log("[spotify/login] redirectUri:", redirectUri);
+
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
@@ -46,6 +54,8 @@ export async function GET(request: NextRequest) {
     redirect_uri: redirectUri,
     state,
   });
+
+  console.log("[spotify/login] Redirecting to Spotify...");
 
   return NextResponse.redirect(
     `https://accounts.spotify.com/authorize?${params.toString()}`
