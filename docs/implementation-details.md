@@ -130,6 +130,51 @@ Detailed implementation notes for each subsystem.
 
 ---
 
+## Soul Sync — Spotify Widget (`src/components/apps/SoulSync/SoulSync.tsx`)
+
+### OAuth Flow (First API Routes in the Project)
+- **Login:** `/api/auth/spotify/login?user=admin|neo` — redirects to Spotify authorize, stores CSRF `state` + `user_alias` in httpOnly cookies (10min TTL)
+- **Callback:** `/api/auth/spotify/callback` — validates CSRF state, exchanges code for tokens, upserts `refresh_token` into `spotify_tokens` table keyed by `user_alias`
+- **Status:** `/api/auth/spotify/status` — returns `{ configured: boolean }` (checks env vars)
+- Both users connect via the same flow — no hardcoded tokens
+
+### Aggregation API (`/api/soul-sync`)
+- `getRefreshToken(userAlias)` — reads from Supabase `spotify_tokens` table
+- `refreshAccessToken(refreshToken, userAlias)` — POSTs to Spotify `/api/token`, handles token rotation (if Spotify issues new refresh token, upserts back to Supabase)
+- `getSpotifyStatus(refreshToken, userAlias)` — gets access token, fetches `/v1/me/player/currently-playing` with `cache: 'no-store'`
+- Both users fetched in parallel via `Promise.all`
+- Resonance computed server-side: both `isPlaying` + same `trackUri`
+- Response: `{ admin, neo, isResonating }` with `Cache-Control: no-store`
+
+### Widget Component
+- Dark cosmic gradient background (`from-[#1a0a2e] to-[#2d1b4e]`)
+- Config check on mount via `/api/auth/spotify/status` — shows setup screen if env vars missing
+- Polls `/api/soul-sync` every 10 seconds via `setInterval` + `fetchSoulSyncAtom`
+- Two `PlayerCard` components: album art (160x160), track name, artist, progress bar, status text
+- Disconnected state: "Connect Spotify" button links to `/api/auth/spotify/login?user=<alias>`
+- Resonating state: glowing `ring-2 ring-pink-400 shadow-[0_0_25px]` on both cards
+- Mobile responsive: cards stack vertically via `useIsMobile`
+
+### SyncHeart Component (Center Heart Indicator)
+- **Neither connected:** Faint outline heart (`text-white/15`)
+- **Admin only (left):** Left half filled red via `clipPath: "inset(0 50% 0 0)"`
+- **Neo only (right):** Right half filled red via `clipPath: "inset(0 0 0 50%)"`
+- **Both connected:** Full solid red fill (`fill-rose-500`), pulsing scale animation (`scale: [1, 1.15, 1]`, 1.2s repeat), 3 staggered ripple outlines expanding + fading (`scale: [1, 2.2]`, `opacity: [0.5, 0]`, stagger delay 0.6s each)
+- Uses `AnimatePresence` for smooth fill/unfill transitions
+
+### Jotai Atoms (`src/store/atoms/soulSync.ts`)
+- `soulSyncDataAtom` — holds `SoulSyncResponse | null`
+- `soulSyncLoadingAtom` / `soulSyncErrorAtom` — loading/error state
+- `fetchSoulSyncAtom` — write-only action, fetches `/api/soul-sync`
+
+### Supabase Table
+```sql
+spotify_tokens (id UUID PK, user_alias TEXT UNIQUE, refresh_token TEXT, updated_at TIMESTAMPTZ)
+```
+- RLS: open policy (personal two-user project)
+
+---
+
 ## Wallpaper Rendering Fix (`Desktop.tsx`)
 - Uses `backgroundImage` CSS property (not `background` shorthand) for wallpaper URLs
 - Prevents CSS shorthand from resetting `backgroundSize`, `backgroundPosition`, `backgroundRepeat`

@@ -2,15 +2,54 @@
 
 import type { WindowAppProps } from "@/types/os";
 
-const OS_VERSION = "1.0.0";
+const OS_VERSION = "1.0.3";
 
 const PATCH_NOTES = [
+  {
+    version: "1.0.3",
+    date: "February 16, 2026",
+    title: "Soul Sync — Dual Playback & Resonance",
+    changes: [
+      "Neo can now connect her Spotify account alongside Admin",
+      "Dual player cards show both users\u2019 now-playing status side by side",
+      "Resonance detection: glowing borders when both listen to the same track",
+      "Dynamic sync heart: half-fills from the connected side, full red pulse when both connected",
+      "Ripple reverberations radiate outward from the heart when both are linked",
+      "Notification fires once when souls enter resonance",
+    ],
+  },
+  {
+    version: "1.0.2",
+    date: "February 16, 2026",
+    title: "Soul Sync — Spotify Integration",
+    changes: [
+      "New Soul Sync app: see what you\u2019re listening to on Spotify in real-time",
+      "Spotify OAuth flow for secure account connection (no hardcoded tokens)",
+      "Server-side aggregation API polls Spotify every 10 seconds",
+      "Automatic token rotation handling for long-lived sessions",
+      "Spotify config check screen when environment variables are missing",
+      "Dark cosmic gradient UI with album art, progress bars, and status indicators",
+    ],
+  },
+  {
+    version: "1.0.1",
+    date: "February 15, 2026",
+    title: "Settings & Mobile Responsiveness",
+    changes: [
+      "New Settings app with relationship uptime counter, wallpaper picker, and system specs",
+      "Full mobile responsiveness: apps open full-screen, dock is touch-friendly",
+      "Desktop icons use flex grid on mobile with single-tap to open",
+      "Love Letters app has list/detail navigation on mobile with Back button",
+      "Wallpapers now always fit the screen (background-size: cover fix)",
+      "Relationship start date configurable in Settings",
+    ],
+  },
   {
     version: "1.0.0",
     date: "February 15, 2026",
     title: "Initial Release",
     changes: [
-      "Welcome to ValentineOS - a macOS-inspired web operating system!",
+      "Welcome to ValentineOS \u2014 a macOS-inspired web operating system!",
       "Launch apps from the dock or desktop icons",
       "Organize your files with the Finder app",
       "Write beautiful love letters with the Love Letters app",

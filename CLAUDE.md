@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Detailed reference docs** (auto-imported):
 - @docs/reference.md — directory structure, type system tables, Jotai atom tables, app registry table, mock file system tree, design tokens
 - @docs/implementation-details.md — subsystem internals (dock magnification, window drag/resize, animations, boot sequence, Finder, wallpaper, gotchas)
-- @docs/ticket-history.md — completed ticket log (TICKET-001 through TICKET-013, MR-001 through MR-004, SETTINGS-001 through SETTINGS-002)
+- @docs/ticket-history.md — completed ticket log (TICKET-001 through TICKET-013, MR-001 through MR-004, SETTINGS-001/002, SOUL-SYNC-001/002/003)
 
 ## Commands
 
@@ -46,7 +46,7 @@ Each `WindowFrame` renders the app component looked up from `APP_REGISTRY`.
 
 ### State Management (`src/store/atoms/`)
 
-All global state lives in Jotai atoms across five files: `windows.ts` (window instances, z-index counter, action atoms for open/close/focus/minimize/maximize/move/resize), `desktop.ts` (wallpaper, icon positions), `filesystem.ts` (file tree), `letters.ts` (Love Letters from Supabase), `settings.ts` (relationship date, wallpaper gallery, uptime calculator).
+All global state lives in Jotai atoms across six files: `windows.ts` (window instances, z-index counter, action atoms for open/close/focus/minimize/maximize/move/resize), `desktop.ts` (wallpaper, icon positions), `filesystem.ts` (file tree), `letters.ts` (Love Letters from Supabase), `settings.ts` (relationship date, wallpaper gallery, uptime calculator), `soulSync.ts` (Spotify playback data, polling state).
 
 **Key pattern:** Derived atoms in `filesystem.ts` return **functions** for parameterized queries (e.g., `folderContentsAtom` returns `(folderId) => items[]`), not plain values.
 
@@ -79,7 +79,11 @@ Magnification uses shared `mouseX` MotionValue → `useTransform` → `useSpring
 
 ### Supabase
 
-Client in `src/lib/supabase.ts` with graceful fallback when env vars are missing (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`). CRUD for Love Letters in `src/services/letterService.ts`.
+Client in `src/lib/supabase.ts` with graceful fallback when env vars are missing (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`). CRUD for Love Letters in `src/services/letterService.ts`. Spotify tokens stored in `spotify_tokens` table (accessed server-side in API routes via fresh `createClient` calls, not the client singleton).
+
+### Soul Sync (Spotify Widget)
+
+First feature using **server-side API routes** (`src/app/api/`). Both users connect via OAuth (`/api/auth/spotify/login?user=admin|neo`), tokens stored in Supabase `spotify_tokens` table. Aggregation API (`/api/soul-sync`) fetches both users' playback in parallel, computes resonance (same track). Widget polls every 10s. `SyncHeart` component shows half-fill based on which user is connected, full fill + ripples when both connected.
 
 ## Adding a New App
 

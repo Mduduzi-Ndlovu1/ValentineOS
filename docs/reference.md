@@ -19,7 +19,9 @@ src/
 │   │   ├── TextEditor.tsx      # Read-only text/code viewer (monospace <pre>)
 │   │   ├── ImageViewer.tsx     # Image preview (centered <img>, dark bg)
 │   │   ├── Settings.tsx        # System Preferences: uptime, wallpaper picker, system specs
-│   │   ├── PatchNotes.tsx      # Version changelog display
+│   │   ├── PatchNotes.tsx      # Version changelog display (v1.0.3)
+│   │   ├── SoulSync/
+│   │   │   └── SoulSync.tsx    # Spotify dual-playback widget with OAuth, resonance, sync heart
 │   │   └── LoveLetters/
 │   │       ├── LoveLetters.tsx  # Main container with sidebar + desk background
 │   │       ├── LetterSidebar.tsx # Glassmorphism sidebar with + button
@@ -42,6 +44,13 @@ src/
 │   ├── useIsMobile.ts          # SSR-safe mobile breakpoint hook (768px matchMedia)
 │   ├── useUptime.ts            # Ticking relationship uptime counter (1s interval)
 │   └── useGlobalRealtime.ts    # Supabase realtime subscription hook
+├── app/
+│   └── api/
+│       ├── auth/spotify/
+│       │   ├── login/route.ts      # Spotify OAuth redirect (accepts ?user=admin|neo)
+│       │   ├── callback/route.ts   # OAuth callback → upserts refresh_token to Supabase
+│       │   └── status/route.ts     # Returns { configured: boolean } for env var check
+│       └── soul-sync/route.ts      # Aggregation API: fetches both users' Spotify status
 ├── lib/
 │   └── supabase.ts             # Supabase client with graceful fallback
 ├── services/
@@ -54,9 +63,11 @@ src/
 │   │   ├── filesystem.ts       # fileSystemAtom, folderContentsAtom, fileSystemItemAtom, breadcrumbAtom
 │   │   ├── letters.ts          # lettersAtom, loadLettersAtom
 │   │   ├── settings.ts         # RELATIONSHIP_START_DATE, WALLPAPER_GALLERY, selectedWallpaperIdAtom, calculateUptime
+│   │   ├── soulSync.ts        # soulSyncDataAtom, soulSyncLoadingAtom, fetchSoulSyncAtom
 │   │   └── windows.ts          # openWindowsAtom, focusedWindowAtom, zIndexCounterAtom + 6 action atoms
 │   └── provider.tsx            # "use client" Jotai Provider wrapper
 └── types/
+    ├── spotify.ts              # SpotifyToken, SpotifyTrack, UserPlaybackStatus, SoulSyncResponse
     ├── fs.ts                   # File system types: ItemType, FileSystemItem, FileSystemState
     ├── letters.ts              # LoveLetter interface
     └── os.ts                   # All OS type definitions + window size constants
@@ -78,7 +89,7 @@ src/
 ### OS Types (`src/types/os.ts`)
 
 ```
-AppID               = "finder" | "settings" | "browser" | "text-editor" | "image-viewer" | "love-letters" | "patch-notes"
+AppID               = "finder" | "settings" | "browser" | "text-editor" | "image-viewer" | "love-letters" | "patch-notes" | "soul-sync"
 WindowPosition      = { x, y }
 WindowSize          = { width, height }
 WindowAppProps      = { content?, imageUrl? }
@@ -113,6 +124,15 @@ WallpaperOption     = { id, url, label }
 WALLPAPER_GALLERY   = WallpaperOption[]          # 6 Unsplash wallpaper presets
 Uptime              = { years, days, hours, minutes, seconds }
 calculateUptime(startDate: string) => Uptime     # Pure function, no side effects
+```
+
+### Spotify Types (`src/types/spotify.ts`)
+
+```
+SpotifyToken        = { id, user_alias, refresh_token, updated_at }
+SpotifyTrack        = { name, artist, albumArt, trackUri, progressMs, durationMs }
+UserPlaybackStatus  = { isPlaying, track: SpotifyTrack | null, status: 'playing' | 'paused' | 'idle' | 'disconnected' }
+SoulSyncResponse    = { admin: UserPlaybackStatus, neo: UserPlaybackStatus, isResonating: boolean }
 ```
 
 - **Normalized flat map** — all items stored in `Record<string, FileSystemItem>` for O(1) lookup by ID
@@ -159,6 +179,14 @@ calculateUptime(startDate: string) => Uptime     # Pure function, no side effect
 | `lettersAtom`        | `atom<LoveLetter[]>`         | Holds array of letters from Supabase            |
 | `loadLettersAtom`    | write-only action            | Fetches letters from Supabase and updates state |
 
+### `soulSync.ts`
+| Export                    | Type                              | Purpose                                     |
+| ------------------------- | --------------------------------- | ------------------------------------------- |
+| `soulSyncDataAtom`        | `atom<SoulSyncResponse \| null>`  | Holds latest poll response from `/api/soul-sync` |
+| `soulSyncLoadingAtom`     | `atom<boolean>`                   | True while fetching                         |
+| `soulSyncErrorAtom`       | `atom<string \| null>`            | Error message on fetch failure              |
+| `fetchSoulSyncAtom`       | write-only action                 | Fetches `/api/soul-sync` and updates atoms  |
+
 ### `settings.ts`
 | Export                      | Type                         | Purpose                                              |
 | --------------------------- | ---------------------------- | ---------------------------------------------------- |
@@ -181,7 +209,7 @@ calculateUptime(startDate: string) => Uptime     # Pure function, no side effect
 
 ## App Registry (`src/config/appRegistry.tsx`)
 
-Seven registered apps (+ 1 placeholder):
+Eight registered apps (+ 1 placeholder):
 
 | AppID          | Name         | Icon (Lucide)  | Default Size | Default Position | Component                  |
 | -------------- | ------------ | -------------- | ------------ | --------------- | -------------------------- |
@@ -192,6 +220,7 @@ Seven registered apps (+ 1 placeholder):
 | `image-viewer` | Preview      | `Eye`          | 600 x 500   | (200, 80)       | `ImageViewer`              |
 | `love-letters` | Love Letters | `Heart`        | 900 x 650   | (150, 50)       | `LoveLetters` (full app)   |
 | `patch-notes`  | Patch Notes  | `Sparkles`     | 550 x 600   | (300, 100)      | `PatchNotes`               |
+| `soul-sync`    | Soul Sync    | `Music`        | 700 x 450   | (200, 100)      | `SoulSync` (full app)      |
 
 ---
 

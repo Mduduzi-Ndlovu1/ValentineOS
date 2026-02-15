@@ -129,3 +129,40 @@ All tickets completed in order:
 - Added `"patch-notes"` to `AppID` union in `src/types/os.ts`
 - Registered in `appRegistry.tsx` with `Sparkles` icon (550x600)
 - Added to `MenuBar.tsx` for quick access
+
+## SOUL-SYNC-001: Spotify OAuth & Aggregation API
+- Created `src/types/spotify.ts` — `SpotifyToken`, `SpotifyTrack`, `UserPlaybackStatus`, `SoulSyncResponse`
+- Created `src/app/api/auth/spotify/login/route.ts` — OAuth redirect with `?user=admin|neo`, CSRF state + user alias in httpOnly cookies
+- Created `src/app/api/auth/spotify/callback/route.ts` — Token exchange, upsert refresh_token to `spotify_tokens` table
+- Created `src/app/api/auth/spotify/status/route.ts` — Returns `{ configured }` for env var check
+- Created `src/app/api/soul-sync/route.ts` — Aggregation API fetching both users' Spotify status in parallel, computes resonance
+- Handles Spotify token rotation (new refresh token upserted back to Supabase)
+- Added `"soul-sync"` to `AppID` union in `src/types/os.ts`
+
+## SOUL-SYNC-002: Soul Sync Widget
+- Created `src/store/atoms/soulSync.ts` — data/loading/error atoms + fetch action
+- Created `src/components/apps/SoulSync/SoulSync.tsx` — Dual-playback widget with:
+  - Dark cosmic gradient UI, two PlayerCards side-by-side (stacked on mobile)
+  - Config check screen when Spotify env vars missing
+  - "Connect Spotify" button per user when disconnected
+  - Album art, track name, artist, progress bar, status indicators
+  - Resonance glow effect on both cards when playing same track
+  - 10-second polling via setInterval + Jotai action atom
+  - Notification on resonance start
+- Registered in `appRegistry.tsx` with `Music` icon (700x450)
+- Updated `Desktop.tsx` to handle `?connected=true` / `?spotify_error=*` query params
+
+## SOUL-SYNC-003: Dynamic Sync Heart
+- Added `SyncHeart` component with 4 visual states:
+  - Neither connected: faint outline heart
+  - Admin only: left half filled red (CSS clipPath)
+  - Neo only: right half filled red (CSS clipPath)
+  - Both connected: full red fill + pulsing scale + 3 staggered ripple reverberations
+- AnimatePresence for smooth fill transitions
+
+## PATCH-NOTES-002: Version Bump to 1.0.3
+- Updated PatchNotes with 3 new versions (1.0.1, 1.0.2, 1.0.3) — newest on top
+- v1.0.3: Soul Sync dual playback & resonance
+- v1.0.2: Soul Sync Spotify integration
+- v1.0.1: Settings & mobile responsiveness
+- Changed `RELATIONSHIP_START_DATE` to `"2025-08-27"`
