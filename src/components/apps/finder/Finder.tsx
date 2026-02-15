@@ -115,7 +115,7 @@ export function Finder() {
   return (
     <div className="flex flex-col md:flex-row h-full overflow-hidden">
       {/* ─── Sidebar ─── */}
-      <div className="w-full md:w-48 bg-base-200/50 backdrop-blur-md border-b md:border-b-0 md:border-r border-base-300 flex flex-col p-2 gap-1 shrink-0 order-2 md:order-1">
+      <div className="w-full md:w-48 bg-base-200/50 backdrop-blur-md border-b md:border-b-0 md:border-r border-base-300 flex flex-col p-2 gap-1 shrink-0">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-2 pt-1 pb-1 hidden md:block">
           Favorites
         </span>
@@ -142,7 +142,7 @@ export function Finder() {
       </div>
 
       {/* ─── Main Content Area ─── */}
-      <div className="flex-1 flex flex-col min-w-0 order-1 md:order-2">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* ─── Top Bar ─── */}
         <div className="flex items-center gap-1 md:gap-2 px-1 md:px-3 py-1.5 border-b border-base-300 bg-base-100/50 shrink-0 overflow-x-auto">
           {/* Back / Forward */}

@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
+import { ChevronLeft } from "lucide-react";
 import { lettersAtom, loadLettersAtom } from "@/store/atoms/letters";
 import { showNotificationAtom } from "@/store/atoms/ui";
 import { currentUserAtom } from "@/store/atoms/user";
 import { markAsOurs } from "@/lib/session";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { LetterSidebar } from "./LetterSidebar";
 import { Stationery } from "./Stationery";
 import { createLetter, sealLetter, updateLetter, deleteLetter } from "@/services/letterService";
@@ -13,6 +15,7 @@ import { createLetter, sealLetter, updateLetter, deleteLetter } from "@/services
 import type { WindowAppProps } from "@/types/os";
 
 export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
+  const isMobile = useIsMobile();
   const [selectedLetterId, setSelectedLetterId] = useState<string | null>(initialLetterId ?? null);
   const [editedContent, setEditedContent] = useState<string>("");
   const [editedTitle, setEditedTitle] = useState<string>("");
@@ -140,6 +143,70 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
       });
     }
   }, [selectedLetterId, loadLetters, showNotification]);
+
+  const handleBackToList = useCallback(() => {
+    setSelectedLetterId(null);
+  }, []);
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-full bg-[#f3e5dc]">
+        {selectedLetter ? (
+          <>
+            {/* Mobile: Back bar + editor */}
+            <div className="flex items-center gap-2 p-2 bg-white/40 backdrop-blur-md border-b border-white/30 shrink-0">
+              <button
+                onClick={handleBackToList}
+                className="btn btn-ghost btn-sm text-[#5c1a1a]"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+              <span
+                className="flex-1 text-center text-sm font-medium text-[#5c1a1a] truncate"
+                style={{ fontFamily: "var(--font-dancing-script)" }}
+              >
+                {editedTitle || "Untitled"}
+              </span>
+              <div className="w-[60px]" />
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center p-2 bg-gradient-to-br from-[#8b5a2b] to-[#5c3a1e] overflow-auto">
+              <div className="mb-2 h-6">
+                {isSaving && (
+                  <span className="text-xs text-white/60 animate-pulse">Saving...</span>
+                )}
+                {showSavedIndicator && !isSaving && (
+                  <span className="text-xs text-green-300 font-medium">Draft saved</span>
+                )}
+              </div>
+              <Stationery
+                letter={{
+                  ...selectedLetter,
+                  content: editedContent,
+                  title: editedTitle,
+                }}
+                editable={isEditable}
+                onUpdateContent={handleContentUpdate}
+                onUpdateTitle={handleTitleUpdate}
+                onSeal={handleSealLetter}
+                onSave={handleSaveLetter}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 overflow-hidden">
+            <LetterSidebar
+              letters={letters}
+              selectedLetterId={selectedLetterId}
+              onSelectLetter={setSelectedLetterId}
+              onCreateLetter={handleCreateLetter}
+              onDeleteLetter={handleDeleteLetter}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-full bg-[#f3e5dc]">

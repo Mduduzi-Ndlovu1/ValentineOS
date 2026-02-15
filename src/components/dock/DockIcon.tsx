@@ -20,13 +20,15 @@ import {
 interface DockIconProps {
   app: AppRegistryEntry;
   mouseX: MotionValue<number>;
+  isMobile?: boolean;
 }
 
 const BASE_SIZE = 40;
 const MAX_SIZE = 56;
 const DISTANCE = 100;
+const MOBILE_ICON_SIZE = 48;
 
-export function DockIcon({ app, mouseX }: DockIconProps) {
+export function DockIcon({ app, mouseX, isMobile = false }: DockIconProps) {
   const ref = useRef<HTMLDivElement>(null);
   const Icon = app.icon;
 
@@ -80,13 +82,17 @@ export function DockIcon({ app, mouseX }: DockIconProps) {
     <div className="relative flex flex-col items-center">
       <motion.div
         ref={ref}
-        style={{ width, height: width }}
+        style={
+          isMobile
+            ? { width: MOBILE_ICON_SIZE, height: MOBILE_ICON_SIZE }
+            : { width, height: width }
+        }
         onClick={handleClick}
         className="flex items-center justify-center rounded-xl bg-white/20 backdrop-blur-md cursor-pointer hover:bg-white/30 transition-colors"
       >
         <Icon className="w-1/2 h-1/2 text-white drop-shadow-md" />
       </motion.div>
-      {isActive && (
+      {!isMobile && isActive && (
         <div className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-white" />
       )}
     </div>

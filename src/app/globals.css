@@ -9,6 +9,8 @@ body {
   width: 100dvw;
   position: fixed;
   inset: 0;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 /* Tiptap Editor Styles */

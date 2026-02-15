@@ -83,7 +83,7 @@ export function LetterSidebar({ letters, selectedLetterId, onSelectLetter, onCre
                     e.stopPropagation();
                     onDeleteLetter(letter.id);
                   }}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded"
+                  className="absolute top-2 right-2 opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded"
                   title="Delete letter"
                 >
                   <Trash2 className="w-3 h-3 text-red-500" />

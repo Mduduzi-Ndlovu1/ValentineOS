@@ -4,6 +4,7 @@ import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart } from "lucide-react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   wallpaperAtom,
   wallpaperFallbackAtom,
@@ -52,6 +53,7 @@ function BootScreen({ onComplete }: { onComplete: () => void }) {
 
 export function Desktop() {
   useGlobalRealtime();
+  const isMobile = useIsMobile();
 
   const wallpaper = useAtomValue(wallpaperAtom);
   const fallback = useAtomValue(wallpaperFallbackAtom);
@@ -91,20 +93,41 @@ export function Desktop() {
       )}
 
       {/* Desktop Icons — slide up after boot */}
-      {icons.map((icon, i) => (
-        <motion.div
-          key={icon.appId}
-          initial={{ opacity: 0, y: 100 }}
-          animate={isBooting ? { opacity: 0, y: 100 } : { opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 25, delay: i * 0.05 }}
-        >
-          <DesktopIcon
-            appId={icon.appId}
-            index={i}
-            constraintsRef={desktopRef}
-          />
-        </motion.div>
-      ))}
+      {isMobile ? (
+        // pt-10 (40px) accounts for MenuBar height (h-7 = 28px) + spacing
+        <div className="flex flex-wrap gap-4 p-4 pt-10 content-start">
+          {icons.map((icon, i) => (
+            <motion.div
+              key={icon.appId}
+              initial={{ opacity: 0, y: 100 }}
+              animate={isBooting ? { opacity: 0, y: 100 } : { opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 25, delay: i * 0.05 }}
+            >
+              <DesktopIcon
+                appId={icon.appId}
+                index={i}
+                constraintsRef={desktopRef}
+                isMobile
+              />
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        icons.map((icon, i) => (
+          <motion.div
+            key={icon.appId}
+            initial={{ opacity: 0, y: 100 }}
+            animate={isBooting ? { opacity: 0, y: 100 } : { opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 25, delay: i * 0.05 }}
+          >
+            <DesktopIcon
+              appId={icon.appId}
+              index={i}
+              constraintsRef={desktopRef}
+            />
+          </motion.div>
+        ))
+      )}
 
       {/* Window Manager */}
       <WindowManager />

@@ -11,6 +11,7 @@ import {
 } from "@/store/atoms/windows";
 import { getAppEntry } from "@/config/appRegistry";
 import { WindowTitleBar } from "./WindowTitleBar";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface WindowFrameProps {
   window: WindowInstance;
@@ -46,6 +47,12 @@ const windowVariants = {
   exit: { opacity: 0, scale: 0.95, filter: "blur(10px)" },
 };
 
+const mobileWindowVariants = {
+  initial: { opacity: 0, y: "100%" },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: "100%" },
+};
+
 const windowTransition = {
   type: "spring" as const,
   stiffness: 300,
@@ -53,6 +60,7 @@ const windowTransition = {
 };
 
 export function WindowFrame({ window: win }: WindowFrameProps) {
+  const isMobile = useIsMobile();
   const focusWindow = useSetAtom(focusWindowAtom);
   const resizeWindow = useSetAtom(resizeWindowAtom);
   const app = getAppEntry(win.appId);
@@ -145,35 +153,41 @@ export function WindowFrame({ window: win }: WindowFrameProps) {
   return (
     <motion.div
       layout={false}
-      variants={windowVariants}
+      variants={isMobile ? mobileWindowVariants : windowVariants}
       initial="initial"
       animate="animate"
       exit="exit"
       transition={windowTransition}
-      className="absolute flex flex-col rounded-lg shadow-2xl overflow-hidden bg-white/80 backdrop-blur-xl border border-white/30"
-      style={{
-        left: win.position.x,
-        top: win.position.y,
-        width: win.size.width,
-        height: win.size.height,
-        minWidth: Math.min(MIN_WINDOW_WIDTH, window.innerWidth - 20),
-        minHeight: Math.min(MIN_WINDOW_HEIGHT, window.innerHeight - 100),
-        maxWidth: "calc(100vw - 20px)",
-        maxHeight: "calc(100vh - 120px)",
-        zIndex: win.zIndex,
-      }}
+      className={`flex flex-col shadow-2xl overflow-hidden bg-white/80 backdrop-blur-xl border border-white/30 ${
+        isMobile ? "fixed inset-0 rounded-none" : "absolute rounded-lg"
+      }`}
+      style={
+        isMobile
+          ? { zIndex: win.zIndex }
+          : {
+              left: win.position.x,
+              top: win.position.y,
+              width: win.size.width,
+              height: win.size.height,
+              minWidth: Math.min(MIN_WINDOW_WIDTH, window.innerWidth - 20),
+              minHeight: Math.min(MIN_WINDOW_HEIGHT, window.innerHeight - 100),
+              maxWidth: "calc(100vw - 20px)",
+              maxHeight: "calc(100vh - 120px)",
+              zIndex: win.zIndex,
+            }
+      }
       onPointerDown={() => focusWindow(win.id)}
     >
       {/* Title Bar */}
-      <WindowTitleBar window={win} />
+      <WindowTitleBar window={win} isMobile={isMobile} />
 
       {/* App Content */}
       <div className="flex-1 overflow-auto">
         <AppComponent {...(win.props ?? {})} />
       </div>
 
-      {/* Resize Handles */}
-      {!win.isMaximized &&
+      {/* Resize Handles — desktop only */}
+      {!isMobile && !win.isMaximized &&
         (Object.keys(RESIZE_POSITIONS) as ResizeDirection[]).map((dir) => (
           <div
             key={dir}

@@ -13,9 +13,10 @@ import {
 
 interface WindowTitleBarProps {
   window: WindowInstance;
+  isMobile?: boolean;
 }
 
-export function WindowTitleBar({ window: win }: WindowTitleBarProps) {
+export function WindowTitleBar({ window: win, isMobile = false }: WindowTitleBarProps) {
   const close = useSetAtom(closeWindowAtom);
   const minimize = useSetAtom(minimizeWindowAtom);
   const maximize = useSetAtom(maximizeWindowAtom);
@@ -27,6 +28,7 @@ export function WindowTitleBar({ window: win }: WindowTitleBarProps) {
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
+      if (isMobile) return;
       // Don't drag if clicking traffic lights
       if ((e.target as HTMLElement).closest("[data-traffic-light]")) return;
 
@@ -41,11 +43,12 @@ export function WindowTitleBar({ window: win }: WindowTitleBarProps) {
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
       focusWindow(win.id);
     },
-    [win.position.x, win.position.y, win.id, focusWindow]
+    [isMobile, win.position.x, win.position.y, win.id, focusWindow]
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
+      if (isMobile) return;
       if (!isDragging.current || win.isMaximized) return;
 
       const deltaX = e.clientX - dragStart.current.mouseX;
@@ -59,7 +62,7 @@ export function WindowTitleBar({ window: win }: WindowTitleBarProps) {
         },
       });
     },
-    [win.id, win.isMaximized, moveWindow]
+    [isMobile, win.id, win.isMaximized, moveWindow]
   );
 
   const handlePointerUp = useCallback(() => {
@@ -68,7 +71,11 @@ export function WindowTitleBar({ window: win }: WindowTitleBarProps) {
 
   return (
     <div
-      className="flex items-center h-8 px-3 bg-white/60 backdrop-blur-sm rounded-t-lg cursor-grab active:cursor-grabbing shrink-0"
+      className={`flex items-center bg-white/60 backdrop-blur-sm shrink-0 ${
+        isMobile
+          ? "h-10 px-4 rounded-none cursor-default"
+          : "h-8 px-3 rounded-t-lg cursor-grab active:cursor-grabbing"
+      }`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -77,28 +84,34 @@ export function WindowTitleBar({ window: win }: WindowTitleBarProps) {
       <div className="flex items-center gap-2" data-traffic-light>
         <button
           onClick={() => close(win.id)}
-          className="w-3 h-3 rounded-full bg-[#ff5f57] hover:brightness-90 transition-all"
+          className={`${isMobile ? "w-5 h-5" : "w-3 h-3"} rounded-full bg-[#ff5f57] hover:brightness-90 transition-all`}
           aria-label="Close"
         />
-        <button
-          onClick={() => minimize(win.id)}
-          className="w-3 h-3 rounded-full bg-[#febc2e] hover:brightness-90 transition-all"
-          aria-label="Minimize"
-        />
-        <button
-          onClick={() => maximize(win.id)}
-          className="w-3 h-3 rounded-full bg-[#28c840] hover:brightness-90 transition-all"
-          aria-label="Maximize"
-        />
+        {!isMobile && (
+          <>
+            <button
+              onClick={() => minimize(win.id)}
+              className="w-3 h-3 rounded-full bg-[#febc2e] hover:brightness-90 transition-all"
+              aria-label="Minimize"
+            />
+            <button
+              onClick={() => maximize(win.id)}
+              className="w-3 h-3 rounded-full bg-[#28c840] hover:brightness-90 transition-all"
+              aria-label="Maximize"
+            />
+          </>
+        )}
       </div>
 
       {/* Title */}
-      <span className="flex-1 text-center text-xs font-medium text-neutral/70 select-none pointer-events-none">
+      <span className={`flex-1 text-center font-medium text-neutral/70 select-none pointer-events-none ${
+        isMobile ? "text-sm" : "text-xs"
+      }`}>
         {win.title}
       </span>
 
       {/* Spacer to balance the traffic lights */}
-      <div className="w-[52px]" />
+      <div className={isMobile ? "w-[20px]" : "w-[52px]"} />
     </div>
   );
 }

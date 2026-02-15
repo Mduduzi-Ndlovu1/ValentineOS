@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Dancing_Script } from "next/font/google";
 import "./globals.css";
 import { JotaiProvider } from "@/store/provider";
@@ -9,6 +9,13 @@ const dancingScript = Dancing_Script({ subsets: ["latin"], variable: "--font-dan
 export const metadata: Metadata = {
   title: "ValentineOS",
   description: "A Valentine-themed Web Operating System",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
