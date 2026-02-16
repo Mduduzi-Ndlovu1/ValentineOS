@@ -1,11 +1,12 @@
 "use client";
 
-import { Pencil, Mail, Plus, Trash2 } from "lucide-react";
+import { Pencil, Mail, MailOpen, Plus, Trash2 } from "lucide-react";
 import type { LoveLetter } from "@/types/letters";
 
 interface LetterSidebarProps {
   letters: LoveLetter[];
   selectedLetterId: string | null;
+  readLetterIds: Set<string>;
   onSelectLetter: (id: string) => void;
   onCreateLetter: () => void;
   onDeleteLetter: (id: string) => void;
@@ -16,7 +17,7 @@ function formatDate(dateString: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function LetterSidebar({ letters, selectedLetterId, onSelectLetter, onCreateLetter, onDeleteLetter }: LetterSidebarProps) {
+export function LetterSidebar({ letters, selectedLetterId, readLetterIds, onSelectLetter, onCreateLetter, onDeleteLetter }: LetterSidebarProps) {
   return (
     <div className="h-full bg-white/40 backdrop-blur-md flex flex-col">
       {/* Header */}
@@ -63,7 +64,11 @@ export function LetterSidebar({ letters, selectedLetterId, onSelectLetter, onCre
                 >
                   <div className="flex items-start gap-2">
                     {letter.is_sealed ? (
-                      <Mail className="w-4 h-4 text-[#c9a88a] shrink-0 mt-0.5" />
+                      readLetterIds.has(letter.id) ? (
+                        <MailOpen className="w-4 h-4 text-[#c9a88a] shrink-0 mt-0.5" />
+                      ) : (
+                        <Mail className="w-4 h-4 text-[#c9a88a] shrink-0 mt-0.5" />
+                      )
                     ) : (
                       <Pencil className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
                     )}

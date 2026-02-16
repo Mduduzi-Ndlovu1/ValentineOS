@@ -166,3 +166,52 @@ All tickets completed in order:
 - v1.0.2: Soul Sync Spotify integration
 - v1.0.1: Settings & mobile responsiveness
 - Changed `RELATIONSHIP_START_DATE` to `"2025-08-27"`
+
+## BOOKSTORE-001: Bookstore App Scaffolding
+- Created `src/types/books.ts` — Book, BestsellerItem, YouTubeVideo, NYTReview, EnrichedBookData interfaces
+- Created API routes:
+  - `/api/books/bestsellers` — NYT Bestsellers + Open Library cover backfill
+  - `/api/books/search` — Google Books search with descriptions
+  - `/api/books/enrich` — YouTube + NYT article enrichment
+  - `/api/books/favorites` — Supabase CRUD for favorites
+- Created `src/store/atoms/books.ts` — All book-related atoms and actions
+
+## BOOKSTORE-002: Bookstore UI Components
+- Created `src/components/apps/Bookstore/Bookstore.tsx` — Main container with search, trending, favorites
+- Created `src/components/apps/Bookstore/BookCard.tsx` — Reusable book card component
+- Created `src/components/apps/Bookstore/BookDetail.tsx` — Full-screen modal with cover, about, media hub
+- Created `src/components/apps/Bookstore/TrendingSection.tsx` — Horizontal scroll for NYT Bestsellers
+- Created `src/components/apps/Bookstore/FavoritesSection.tsx` — Grid of saved favorites
+- Added custom colors to `tailwind.config.ts`: reader-cream (#F8F4E9), reader-beige (#E8DCCA), reader-brown (#3C2F2F)
+- Added Montserrat + Libre Caslon Text fonts to `layout.tsx`
+- Registered "bookstore" in appRegistry.tsx
+
+## BOOKSTORE-003: Read Sample iFrame & Favorites
+- Updated BookDetail with "Read Sample" button that opens Google Books preview in full-screen iframe
+- Heart button saves book to favorites (Supabase)
+- Favorites persist across sessions
+
+## BOOKSTORE-004: Book Request Notifications (Neo → Admin)
+- Created `/api/books/request` — POST/GET/PATCH for book requests
+- Created `book_requests` table in Supabase
+- Created `src/hooks/useBookRequests.ts` — Realtime subscription + OS notifications
+- When Neo favorites a book: saves request to DB
+- Admin loads app: fetches unread requests, shows notification, marks as read
+- Shows toast + OS-level notification
+
+## PREFERENCES-001: User Preferences Persistence
+- Created `user_preferences` table in Supabase (wallpaper_url, preferences JSONB)
+- Created `/api/user/preferences` — GET/POST for preferences
+- Created `src/config/version.ts` — Single source of truth for version (reads from package.json)
+- Updated `src/store/atoms/desktop.ts` with loadPreferencesAtom, savePreferenceAtom
+- Desktop.tsx loads preferences on boot
+- Settings.tsx saves wallpaper on change
+
+## PATCH-NOTES-003: Version Bump to 1.1.0
+- Version bumped to "1.1.0" in package.json
+- Updated PatchNotes with v1.1.0 "The Reader's Nook" entry (story-bible noir style)
+- Added NEW badge for unread patch notes:
+  - Tracks last_read_version in user preferences
+  - Shows pulsing "NEW" badge in MenuBar when unread
+  - Marks as read when PatchNotes opens
+- Updated story-bible.md with Chapter 5: "The Reader's Nook"

@@ -9,7 +9,7 @@ Detailed reference for the type system, Jotai atom architecture, app registry, f
 ```
 src/
 ├── app/
-│   ├── layout.tsx              # Root layout: Jotai Provider, Dancing Script font, DaisyUI valentine theme
+│   ├── layout.tsx              # Root layout: Jotai Provider, Dancing Script + Montserrat + Libre Caslon fonts, DaisyUI valentine theme
 │   ├── page.tsx                # Single page: renders <Desktop />
 │   └── globals.css             # Tailwind directives + body overflow lock + Tiptap editor styles
 ├── components/
@@ -19,9 +19,15 @@ src/
 │   │   ├── TextEditor.tsx      # Read-only text/code viewer (monospace <pre>)
 │   │   ├── ImageViewer.tsx     # Image preview (centered <img>, dark bg)
 │   │   ├── Settings.tsx        # System Preferences: uptime, wallpaper picker, system specs
-│   │   ├── PatchNotes.tsx      # Version changelog display (v1.0.3)
+│   │   ├── PatchNotes.tsx      # Version changelog display (v1.1.0)
 │   │   ├── SoulSync/
 │   │   │   └── SoulSync.tsx    # Spotify dual-playback widget with OAuth, resonance, sync heart
+│   │   ├── Bookstore/
+│   │   │   ├── Bookstore.tsx   # Main container: search bar, trending, favorites
+│   │   │   ├── BookCard.tsx   # Reusable book card (cover + title + author)
+│   │   │   ├── BookDetail.tsx # Full-screen modal: cover, about, read sample iframe, media hub
+│   │   │   ├── TrendingSection.tsx  # Horizontal scroll of NYT Bestsellers
+│   │   │   └── FavoritesSection.tsx  # Grid of saved favorites
 │   │   └── LoveLetters/
 │   │       ├── LoveLetters.tsx  # Main container with sidebar + desk background
 │   │       ├── LetterSidebar.tsx # Glassmorphism sidebar with + button
@@ -34,23 +40,33 @@ src/
 │   │   ├── Dock.tsx            # Glassmorphism bottom bar, shared mouseX MotionValue
 │   │   └── DockIcon.tsx        # Magnification wave effect + click-to-open/minimize/restore/focus logic
 │   └── window/
-│       ├── WindowManager.tsx   # Maps openWindowsAtom → WindowFrame instances (filters out minimized)
+│       ├── WindowManager.tsx    # Maps openWindowsAtom → WindowFrame instances (filters out minimized)
 │       ├── WindowFrame.tsx     # Draggable/resizable window shell with 8 resize handles
 │       └── WindowTitleBar.tsx  # Traffic lights (close/min/max) + pointer-event drag handle
 ├── config/
 │   ├── appRegistry.tsx         # APP_REGISTRY array + APP_REGISTRY_MAP (O(1) lookup) + getAppEntry()
-│   └── initialFileSystem.ts     # Normalized mock file system data (folders, files, images)
+│   ├── version.ts              # Single source of truth: reads from package.json
+│   └── initialFileSystem.ts   # Normalized mock file system data (folders, files, images)
 ├── hooks/
 │   ├── useIsMobile.ts          # SSR-safe mobile breakpoint hook (768px matchMedia)
 │   ├── useUptime.ts            # Ticking relationship uptime counter (1s interval)
-│   └── useGlobalRealtime.ts    # Supabase realtime subscription hook
+│   ├── useGlobalRealtime.ts    # Supabase realtime subscription hook (Love Letters)
+│   └── useBookRequests.ts      # Book request notifications: realtime + polling + OS notifications
 ├── app/
 │   └── api/
 │       ├── auth/spotify/
 │       │   ├── login/route.ts      # Spotify OAuth redirect (accepts ?user=admin|neo)
 │       │   ├── callback/route.ts   # OAuth callback → upserts refresh_token to Supabase
 │       │   └── status/route.ts     # Returns { configured: boolean } for env var check
-│       └── soul-sync/route.ts      # Aggregation API: fetches both users' Spotify status
+│       ├── soul-sync/route.ts      # Aggregation API: fetches both users' Spotify status
+│       ├── books/
+│       │   ├── bestsellers/route.ts  # NYT Bestsellers + Open Library cover backfill
+│       │   ├── search/route.ts      # Google Books search
+│       │   ├── enrich/route.ts      # YouTube + NYT article enrichment
+│       │   ├── favorites/route.ts    # Supabase CRUD for favorites
+│       │   └── request/route.ts      # Book request notifications (POST/GET/PATCH)
+│       └── user/
+│           └── preferences/route.ts  # User preferences (wallpaper, last_read_version)
 ├── lib/
 │   └── supabase.ts             # Supabase client with graceful fallback
 ├── services/
@@ -59,18 +75,20 @@ src/
 │   ├── actions/
 │   │   └── fileActions.ts      # openFileAtom — maps file types to app windows
 │   ├── atoms/
-│   │   ├── desktop.ts          # wallpaperAtom, wallpaperFallbackAtom, desktopIconsAtom
+│   │   ├── desktop.ts          # wallpaperAtom, wallpaperFallbackAtom, desktopIconsAtom, userPreferencesAtom, loadPreferencesAtom, savePreferenceAtom, hasNewVersionAtom, markVersionReadAtom
 │   │   ├── filesystem.ts       # fileSystemAtom, folderContentsAtom, fileSystemItemAtom, breadcrumbAtom
 │   │   ├── letters.ts          # lettersAtom, loadLettersAtom
 │   │   ├── settings.ts         # RELATIONSHIP_START_DATE, WALLPAPER_GALLERY, selectedWallpaperIdAtom, calculateUptime
-│   │   ├── soulSync.ts        # soulSyncDataAtom, soulSyncLoadingAtom, fetchSoulSyncAtom
-│   │   └── windows.ts          # openWindowsAtom, focusedWindowAtom, zIndexCounterAtom + 6 action atoms
+│   │   ├── soulSync.ts         # soulSyncDataAtom, soulSyncLoadingAtom, fetchSoulSyncAtom
+│   │   ├── books.ts             # searchQueryAtom, bestsellersAtom, searchResultsAtom, currentBookAtom, enrichmentDataAtom, favoritesAtom, fetchBestsellersAtom, fetchSearchAtom, fetchEnrichmentAtom, addFavoriteAtom, removeFavoriteAtom, loadFavoritesAtom
+│   │   └── windows.ts           # openWindowsAtom, focusedWindowAtom, zIndexCounterAtom + 6 action atoms
 │   └── provider.tsx            # "use client" Jotai Provider wrapper
 └── types/
     ├── spotify.ts              # SpotifyToken, SpotifyTrack, UserPlaybackStatus, SoulSyncResponse
-    ├── fs.ts                   # File system types: ItemType, FileSystemItem, FileSystemState
+    ├── fs.ts                  # File system types: ItemType, FileSystemItem, FileSystemState
     ├── letters.ts              # LoveLetter interface
-    └── os.ts                   # All OS type definitions + window size constants
+    ├── books.ts               # Book, BestsellerItem, YouTubeVideo, NYTReview, EnrichedBookData
+    └── os.ts                  # All OS type definitions + window size constants
 ```
 
 ### Config Files (root)
@@ -89,7 +107,7 @@ src/
 ### OS Types (`src/types/os.ts`)
 
 ```
-AppID               = "finder" | "settings" | "browser" | "text-editor" | "image-viewer" | "love-letters" | "patch-notes" | "soul-sync"
+AppID               = "finder" | "settings" | "browser" | "text-editor" | "image-viewer" | "love-letters" | "patch-notes" | "soul-sync" | "bookstore"
 WindowPosition      = { x, y }
 WindowSize          = { width, height }
 WindowAppProps      = { content?, imageUrl? }
@@ -135,6 +153,16 @@ UserPlaybackStatus  = { isPlaying, track: SpotifyTrack | null, status: 'playing'
 SoulSyncResponse    = { admin: UserPlaybackStatus, neo: UserPlaybackStatus, isResonating: boolean }
 ```
 
+### Book Types (`src/types/books.ts`)
+
+```
+Book                = { id, title, authors[], description, pageCount, categories[], averageRating, imageLinks: { thumbnail, large? }, isbn?, previewLink? }
+BestsellerItem     = { isbn, title, author, coverUrl, description }
+YouTubeVideo        = { id, title, thumbnail, channelName }
+NYTReview           = { url, byline, headline, publicationDate }
+EnrichedBookData    = { videos: YouTubeVideo[], reviews: NYTReview[] }
+```
+
 - **Normalized flat map** — all items stored in `Record<string, FileSystemItem>` for O(1) lookup by ID
 - **`children`** — array of child IDs (only on folders), not nested objects
 - **`parentId`** — enables walking up the tree for breadcrumbs
@@ -150,6 +178,29 @@ SoulSyncResponse    = { admin: UserPlaybackStatus, neo: UserPlaybackStatus, isRe
 | `wallpaperAtom`         | `atom<string>`        | CSS background value (Unsplash URL)            |
 | `wallpaperFallbackAtom` | `atom<string>`        | Pink-to-red gradient fallback                  |
 | `desktopIconsAtom`      | `atom<DesktopIconState[]>` | Icon positions on desktop, initialized in grid |
+| `userPreferencesAtom`    | `atom<UserPreferences>`| User preferences from Supabase                  |
+| `hasNewVersionAtom`    | `atom<boolean>`       | True if user hasn't read latest version        |
+| `loadPreferencesAtom`   | write-only action     | Fetches preferences from Supabase on boot       |
+| `savePreferenceAtom`    | write-only action    | Saves preference to Supabase                   |
+| `markVersionReadAtom`   | write-only action    | Marks current version as read                   |
+
+### `books.ts`
+| Atom                    | Type                  | Purpose                                       |
+| ----------------------- | --------------------- | --------------------------------------------- |
+| `searchQueryAtom`      | `atom<string>`        | Current search input                           |
+| `bestsellersAtom`      | `atom<BestsellerItem[]>` | NYT Bestsellers list                        |
+| `searchResultsAtom`    | `atom<Book[]>`        | Google Books search results                    |
+| `currentBookAtom`      | `atom<Book | BestsellerItem | null>` | Selected book for detail view    |
+| `enrichmentDataAtom`  | `atom<EnrichedBookData | null>` | YouTube + NYT data              |
+| `favoritesAtom`        | `atom<Book[]>`        | Saved favorites from Supabase                  |
+| `booksLoadingAtom`    | `atom<boolean>`       | Loading state                                 |
+| `booksErrorAtom`      | `atom<string | null>` | Error messages                                |
+| `fetchBestsellersAtom`| write-only action     | Fetches NYT Bestsellers                        |
+| `fetchSearchAtom`     | write-only action     | Searches Google Books                         |
+| `fetchEnrichmentAtom` | write-only action     | Fetches YouTube + NYT enrichment               |
+| `addFavoriteAtom`     | write-only action     | Adds book to favorites                        |
+| `removeFavoriteAtom`  | write-only action     | Removes book from favorites                   |
+| `loadFavoritesAtom`   | write-only action     | Loads favorites from Supabase                 |
 
 ### `windows.ts`
 | Atom                  | Type                         | Purpose                                  |
@@ -204,12 +255,13 @@ SoulSyncResponse    = { admin: UserPlaybackStatus, neo: UserPlaybackStatus, isRe
 | `useIsMobile()`      | `useIsMobile.ts`        | `boolean`        | SSR-safe matchMedia listener at 768px; defaults `false`    |
 | `useUptime()`        | `useUptime.ts`          | `Uptime`         | Ticking 1s interval counter from `RELATIONSHIP_START_DATE` |
 | `useGlobalRealtime()`| `useGlobalRealtime.ts`  | `void`           | Supabase realtime subscription for Love Letters sync       |
+| `useBookRequests()`   | `useBookRequests.ts`    | `void`           | Book request notifications: realtime + polling + OS Notify  |
 
 ---
 
 ## App Registry (`src/config/appRegistry.tsx`)
 
-Eight registered apps (+ 1 placeholder):
+Nine registered apps:
 
 | AppID          | Name         | Icon (Lucide)  | Default Size | Default Position | Component                  |
 | -------------- | ------------ | -------------- | ------------ | --------------- | -------------------------- |
@@ -221,6 +273,7 @@ Eight registered apps (+ 1 placeholder):
 | `love-letters` | Love Letters | `Heart`        | 900 x 650   | (150, 50)       | `LoveLetters` (full app)   |
 | `patch-notes`  | Patch Notes  | `Sparkles`     | 550 x 600   | (300, 100)      | `PatchNotes`               |
 | `soul-sync`    | Soul Sync    | `Music`        | 700 x 450   | (200, 100)      | `SoulSync` (full app)      |
+| `bookstore`    | Bookstore    | `BookOpen`     | 800 x 600   | (150, 50)       | `Bookstore` (full app)    |
 
 ---
 

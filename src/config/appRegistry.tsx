@@ -1,4 +1,4 @@
-import { FolderOpen, Settings, Globe, FileText, Eye, Heart, Sparkles, Music } from "lucide-react";
+import { FolderOpen, Settings, Globe, FileText, Eye, Heart, Sparkles, Music, BookOpen } from "lucide-react";
 import type { AppRegistryEntry, AppID } from "@/types/os";
 import { Finder } from "@/components/apps/finder/Finder";
 import { TextEditor } from "@/components/apps/TextEditor";
@@ -7,6 +7,7 @@ import { LoveLetters } from "@/components/apps/LoveLetters/LoveLetters";
 import { PatchNotes } from "@/components/apps/PatchNotes";
 import { SettingsApp } from "@/components/apps/Settings";
 import { SoulSync } from "@/components/apps/SoulSync/SoulSync";
+import { Bookstore } from "@/components/apps/Bookstore/Bookstore";
 
 // Placeholder app components (Browser — to be replaced later)
 
@@ -78,6 +79,14 @@ export const APP_REGISTRY: AppRegistryEntry[] = [
     defaultSize: { width: 700, height: 450 },
     defaultPosition: { x: 200, y: 100 },
     component: SoulSync,
+  },
+  {
+    id: "bookstore",
+    name: "Bookstore",
+    icon: BookOpen,
+    defaultSize: { width: 800, height: 600 },
+    defaultPosition: { x: 150, y: 50 },
+    component: Bookstore,
   },
 ];
 

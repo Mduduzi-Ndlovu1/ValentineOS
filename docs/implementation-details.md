@@ -194,6 +194,112 @@ style={
 
 ---
 
+## Bookstore App — "The Reader's Nook" (`src/components/apps/Bookstore/`)
+
+### Architecture
+- Mobile-first design with warm cream (#F8F4E9), beige (#E8DCCA), and brown (#3C2F2F) color palette
+- Fonts: Montserrat (headings), Libre Caslon Text (body) — loaded via `next/font/google`
+- Three main sections: Search bar, Trending (NYT Bestsellers), Favorites
+
+### API Routes (`src/app/api/books/`)
+
+| Endpoint | Method | Source | Output |
+|----------|--------|--------|--------|
+| `/api/books/bestsellers` | GET | NYT Books API + Open Library (cover backfill) | `BestsellerItem[]` |
+| `/api/books/search` | GET | Google Books API | `Book[]` with descriptions |
+| `/api/books/enrich` | GET | YouTube Data API + NYT Reviews API | `{ videos, reviews }` |
+| `/api/books/favorites` | GET/POST/DELETE | Supabase `book_favorites` table | Favorites CRUD |
+| `/api/books/request` | GET/POST/PATCH | Supabase `book_requests` table | Request notifications |
+
+### Book Detail View (`BookDetail.tsx`)
+- Full-screen modal with edge-to-edge book cover (using `object-contain` to prevent stretching)
+- "Read Sample" button: Opens Google Books preview in full-screen iframe
+- Heart button: Saves to favorites + sends request notification (Neo → Admin)
+- Media Hub: YouTube video cards + NYT article links
+
+### State Management (`src/store/atoms/books.ts`)
+- `searchQueryAtom`, `bestsellersAtom`, `searchResultsAtom`
+- `currentBookAtom`, `enrichmentDataAtom`, `favoritesAtom`
+- Actions: `fetchBestsellersAtom`, `fetchSearchAtom`, `fetchEnrichmentAtom`
+- Favorites synced with Supabase `book_favorites` table
+
+### Book Request Notifications
+
+#### Flow
+1. Neo clicks heart on a book → Saves to favorites + POSTs to `/api/books/request`
+2. Request saved to `book_requests` table with `from_user: 'neo'`, `to_user: 'admin'`
+3. Admin loads app → Fetches unread requests → Shows notification → Marks as read
+
+#### Real-time (Optional)
+- Supabase Realtime subscription to `book_requests` table
+- Instant notification when new INSERT happens
+
+#### OS-Level Notifications
+- Uses Browser Notification API: `Notification.requestPermission()` + `new Notification(...)`
+- Requests permission on hook mount
+
+#### Files
+- **API:** `src/app/api/books/request/route.ts`
+- **Hook:** `src/hooks/useBookRequests.ts`
+- **Table:** `book_requests` (id, from_user, to_user, book_title, book_author, book_cover_url, is_read, created_at)
+
+---
+
+## User Preferences Persistence (`src/store/atoms/desktop.ts`)
+
+### Problem
+Wallpaper resets to default on login (stored only in memory).
+
+### Solution
+- Created `user_preferences` table in Supabase
+- Load preferences on boot via `loadPreferencesAtom(userAlias)`
+- Save on change via `savePreferenceAtom({ userAlias, key, value })`
+
+### Database Schema
+```sql
+user_preferences (
+  id UUID PK,
+  user_alias TEXT UNIQUE,  -- 'admin' | 'neo'
+  wallpaper_url TEXT,
+  preferences JSONB,       -- flexible key-value store
+  updated_at TIMESTAMPTZ
+)
+```
+
+### API (`src/app/api/user/preferences/route.ts`)
+- `GET ?userAlias=admin|neo` — returns `{ wallpaper_url, preferences }`
+- `POST` — upserts preferences (wallpaper_url + JSONB merge)
+
+### Usage
+- **Desktop.tsx:** Calls `loadPreferences(userAlias)` after boot when user is known
+- **Settings.tsx:** Calls `savePreference({ userAlias, key: 'wallpaper_url', value: ... })` on wallpaper change
+
+---
+
+## Patch Notes Version System
+
+### Single Source of Truth
+- Version defined in `package.json` → `"version": "1.1.0"`
+- `src/config/version.ts` reads from package.json:
+  ```ts
+  import packageJson from "../../package.json";
+  export const OS_VERSION = packageJson.version;
+  ```
+- `PatchNotes.tsx` and `MenuBar.tsx` import from `version.ts`
+
+### NEW Badge for Unread Versions
+- Tracks `last_read_version` in user preferences (JSONB)
+- `hasNewVersionAtom` computed: `lastReadVersion !== OS_VERSION`
+- MenuBar shows pulsing "NEW" badge when `hasNewVersionAtom` is true
+- Opens PatchNotes → calls `markVersionReadAtom(userAlias)` → saves current version to preferences
+
+### Files
+- **Config:** `src/config/version.ts`
+- **Atoms:** `src/store/atoms/desktop.ts` (hasNewVersionAtom, markVersionReadAtom)
+- **Component:** `src/components/ui/MenuBar.tsx`
+
+---
+
 ## Gotchas & Lessons Learned
 
 1. **Directory name** — `ValentineOS` has capitals; `create-next-app` rejects this for npm naming. Used manual Next.js setup instead.

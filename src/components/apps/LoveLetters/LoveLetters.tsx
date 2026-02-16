@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ChevronLeft } from "lucide-react";
-import { lettersAtom, loadLettersAtom } from "@/store/atoms/letters";
+import { lettersAtom, loadLettersAtom, readLetterIdsAtom, markLetterReadAtom } from "@/store/atoms/letters";
 import { showNotificationAtom } from "@/store/atoms/ui";
 import { currentUserAtom } from "@/store/atoms/user";
 import { markAsOurs } from "@/lib/session";
@@ -28,6 +28,8 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
   const loadLetters = useSetAtom(loadLettersAtom);
   const showNotification = useSetAtom(showNotificationAtom);
   const currentUser = useAtomValue(currentUserAtom);
+  const readLetterIds = useAtomValue(readLetterIdsAtom);
+  const markLetterRead = useSetAtom(markLetterReadAtom);
 
   useEffect(() => {
     loadLetters();
@@ -39,6 +41,9 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
     if (selectedLetter) {
       setEditedContent(selectedLetter.content);
       setEditedTitle(selectedLetter.title);
+      if (selectedLetter.is_sealed) {
+        markLetterRead(selectedLetter.id);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLetter?.id]);
@@ -198,6 +203,7 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
             <LetterSidebar
               letters={letters}
               selectedLetterId={selectedLetterId}
+              readLetterIds={readLetterIds}
               onSelectLetter={setSelectedLetterId}
               onCreateLetter={handleCreateLetter}
               onDeleteLetter={handleDeleteLetter}
@@ -215,6 +221,7 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
         <LetterSidebar
           letters={letters}
           selectedLetterId={selectedLetterId}
+          readLetterIds={readLetterIds}
           onSelectLetter={setSelectedLetterId}
           onCreateLetter={handleCreateLetter}
           onDeleteLetter={handleDeleteLetter}

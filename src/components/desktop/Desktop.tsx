@@ -1,6 +1,6 @@
 "use client";
 
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart } from "lucide-react";
@@ -9,7 +9,9 @@ import {
   wallpaperAtom,
   wallpaperFallbackAtom,
   desktopIconsAtom,
+  loadPreferencesAtom,
 } from "@/store/atoms/desktop";
+import { currentUserAtom } from "@/store/atoms/user";
 import { DesktopIcon } from "./DesktopIcon";
 import { Dock } from "@/components/dock/Dock";
 import { WindowManager } from "@/components/window/WindowManager";
@@ -17,6 +19,7 @@ import { Toast } from "@/components/ui/Toast";
 import { MenuBar } from "@/components/ui/MenuBar";
 import { NotificationCenter } from "@/components/ui/NotificationCenter";
 import { useGlobalRealtime } from "@/hooks/useGlobalRealtime";
+import { useBookRequests } from "@/hooks/useBookRequests";
 import { showNotificationAtom } from "@/store/atoms/ui";
 
 function BootScreen({ onComplete }: { onComplete: () => void }) {
@@ -54,6 +57,7 @@ function BootScreen({ onComplete }: { onComplete: () => void }) {
 
 export function Desktop() {
   useGlobalRealtime();
+  useBookRequests();
   const isMobile = useIsMobile();
 
   const wallpaper = useAtomValue(wallpaperAtom);
@@ -64,6 +68,16 @@ export function Desktop() {
   const desktopRef = useRef<HTMLDivElement>(null!);
 
   const showNotification = useSetAtom(showNotificationAtom);
+  const loadPreferences = useSetAtom(loadPreferencesAtom);
+  const [currentUser] = useAtom(currentUserAtom);
+
+  // Load user preferences on mount (after boot completes)
+  useEffect(() => {
+    if (!isBooting && currentUser) {
+      const userAlias = currentUser === "Mduduzi" ? "admin" : "neo";
+      loadPreferences(userAlias);
+    }
+  }, [isBooting, currentUser, loadPreferences]);
 
   // Handle Spotify OAuth redirect query params
   useEffect(() => {

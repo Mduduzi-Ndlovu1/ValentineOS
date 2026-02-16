@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
+import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { motion } from "framer-motion";
 import { Heart, Monitor, Cpu, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useUptime } from "@/hooks/useUptime";
-import { wallpaperAtom } from "@/store/atoms/desktop";
+import { wallpaperAtom, savePreferenceAtom } from "@/store/atoms/desktop";
+import { currentUserAtom } from "@/store/atoms/user";
 import {
   WALLPAPER_GALLERY,
   selectedWallpaperIdAtom,
@@ -80,13 +81,21 @@ function DisplayTab() {
   const setWallpaper = useSetAtom(wallpaperAtom);
   const selectedId = useAtomValue(selectedWallpaperIdAtom);
   const setSelectedId = useSetAtom(selectedWallpaperIdAtom);
+  const savePreference = useSetAtom(savePreferenceAtom);
+  const [currentUser] = useAtom(currentUserAtom);
 
   const handleSelect = useCallback(
     (id: string, url: string) => {
       setSelectedId(id);
       setWallpaper(`url(${url})`);
+      
+      // Save to Supabase for persistence
+      if (currentUser) {
+        const userAlias = currentUser === "Mduduzi" ? "admin" : "neo";
+        savePreference({ userAlias, key: "wallpaper_url", value: `url(${url})` });
+      }
     },
-    [setWallpaper, setSelectedId]
+    [setWallpaper, setSelectedId, savePreference, currentUser]
   );
 
   return (

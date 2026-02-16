@@ -8,7 +8,13 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'reader-cream': '#F8F4E9',
+        'reader-beige': '#E8DCCA',
+        'reader-brown': '#3C2F2F',
+      },
+    },
   },
   plugins: [daisyui],
   daisyui: {
