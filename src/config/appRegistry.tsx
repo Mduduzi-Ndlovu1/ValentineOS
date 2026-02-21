@@ -1,4 +1,4 @@
-import { FolderOpen, Settings, Globe, FileText, Eye, Heart, Sparkles, Music, BookOpen } from "lucide-react";
+import { FolderOpen, Settings, Globe, FileText, Eye, Heart, Sparkles, Music, BookOpen, Compass } from "lucide-react";
 import type { AppRegistryEntry, AppID } from "@/types/os";
 import { Finder } from "@/components/apps/finder/Finder";
 import { TextEditor } from "@/components/apps/TextEditor";
@@ -8,6 +8,7 @@ import { PatchNotes } from "@/components/apps/PatchNotes";
 import { SettingsApp } from "@/components/apps/Settings";
 import { SoulSync } from "@/components/apps/SoulSync/SoulSync";
 import { Bookstore } from "@/components/apps/Bookstore/Bookstore";
+import { Compass as CompassApp } from "@/components/apps/Compass/Compass";
 
 // Placeholder app components (Browser — to be replaced later)
 
@@ -87,6 +88,14 @@ export const APP_REGISTRY: AppRegistryEntry[] = [
     defaultSize: { width: 800, height: 600 },
     defaultPosition: { x: 150, y: 50 },
     component: Bookstore,
+  },
+  {
+    id: "compass",
+    name: "Compass",
+    icon: Compass,
+    defaultSize: { width: 900, height: 600 },
+    defaultPosition: { x: 100, y: 100 },
+    component: CompassApp,
   },
 ];
 
