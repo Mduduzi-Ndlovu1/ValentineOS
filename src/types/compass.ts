@@ -17,6 +17,11 @@ export interface CompassEvent {
     lat: number;
     lng: number;
   } | null;
+  price_range: {
+    min: number;
+    max: number;
+    currency: string;
+  } | null;
 }
 
 export interface CompassState {

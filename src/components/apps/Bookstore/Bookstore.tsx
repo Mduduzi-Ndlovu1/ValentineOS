@@ -55,9 +55,9 @@ export function Bookstore() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-reader-cream relative overflow-hidden font-sans">
+    <div className="flex flex-col h-full bg-transparent relative overflow-hidden font-sans p-3">
       {/* Header / Search */}
-      <div className="sticky top-0 z-20 bg-reader-cream/90 backdrop-blur-md px-4 py-4 border-b border-reader-beige">
+      <div className="sticky top-0 z-20 bg-white/30 backdrop-blur-md px-4 py-4 border-b border-reader-beige">
         <div className="relative max-w-2xl mx-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-reader-brown/40" />
           <input

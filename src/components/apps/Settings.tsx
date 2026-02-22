@@ -2,23 +2,24 @@
 
 import { useState, useCallback } from "react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
-import { motion } from "framer-motion";
-import { Heart, Monitor, Cpu, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Monitor, Cpu, Check, X, Image as ImageIcon, RotateCcw } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useUptime } from "@/hooks/useUptime";
-import { wallpaperAtom, savePreferenceAtom } from "@/store/atoms/desktop";
+import { wallpaperAtom, savePreferenceAtom, customIconsAtom, iconThemeAtom } from "@/store/atoms/desktop";
 import { currentUserAtom } from "@/store/atoms/user";
+import { APP_REGISTRY } from "@/config/appRegistry";
 import {
   WALLPAPER_GALLERY,
   selectedWallpaperIdAtom,
 } from "@/store/atoms/settings";
 
 // ─── Tab definitions ───
-type SettingsTab = "about" | "display" | "system";
+type SettingsTab = "about" | "appearance" | "system";
 
 const TABS: { id: SettingsTab; label: string }[] = [
   { id: "about", label: "The Heart" },
-  { id: "display", label: "Wallpapers" },
+  { id: "appearance", label: "Appearance" },
   { id: "system", label: "System Specs" },
 ];
 
@@ -76,15 +77,20 @@ function UptimeUnit({ value, label }: { value: number; label: string }) {
   );
 }
 
-// ─── Display Tab ───
-function DisplayTab() {
+// ─── Appearance Tab ───
+function AppearanceTab() {
   const setWallpaper = useSetAtom(wallpaperAtom);
   const selectedId = useAtomValue(selectedWallpaperIdAtom);
   const setSelectedId = useSetAtom(selectedWallpaperIdAtom);
   const savePreference = useSetAtom(savePreferenceAtom);
   const [currentUser] = useAtom(currentUserAtom);
+  
+  const [customIcons, setCustomIcons] = useAtom(customIconsAtom);
+  const [iconTheme, setIconTheme] = useAtom(iconThemeAtom);
+  const [editingAppId, setEditingAppId] = useState<string | null>(null);
+  const [iconUrlInput, setIconUrlInput] = useState("");
 
-  const handleSelect = useCallback(
+  const handleSelectWallpaper = useCallback(
     (id: string, url: string) => {
       setSelectedId(id);
       setWallpaper(`url(${url})`);
@@ -98,46 +104,193 @@ function DisplayTab() {
     [setWallpaper, setSelectedId, savePreference, currentUser]
   );
 
-  return (
-    <div className="p-4 h-full overflow-y-auto">
-      <h2
-        className="text-xl text-rose-700 mb-1"
-        style={{ fontFamily: "var(--font-dancing-script)" }}
-      >
-        Wallpapers
-      </h2>
-      <p className="text-xs text-gray-400 mb-4">Choose your backdrop</p>
+  const handleSaveIcon = () => {
+    if (editingAppId && iconUrlInput) {
+      const newIcons = { ...customIcons, [editingAppId]: iconUrlInput };
+      setCustomIcons(newIcons);
+      if (currentUser) {
+         const userAlias = currentUser === "Mduduzi" ? "admin" : "neo";
+         savePreference({ userAlias, key: "custom_icons", value: newIcons });
+      }
+      setEditingAppId(null);
+      setIconUrlInput("");
+    }
+  };
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {WALLPAPER_GALLERY.map((wp) => (
-          <button
-            key={wp.id}
-            onClick={() => handleSelect(wp.id, wp.url)}
-            className={`relative group rounded-lg overflow-hidden aspect-video border-2 transition-all ${
-              selectedId === wp.id
-                ? "border-rose-500 shadow-lg shadow-rose-200"
-                : "border-transparent hover:border-rose-300"
-            }`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={wp.url}
-              alt={wp.label}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-            <span className="absolute bottom-1 left-1 right-1 text-[10px] text-white font-medium drop-shadow-md truncate">
-              {wp.label}
-            </span>
-            {selectedId === wp.id && (
-              <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
+  const handleResetIcon = (appId: string) => {
+    const newIcons = { ...customIcons };
+    delete newIcons[appId];
+    setCustomIcons(newIcons);
+    if (currentUser) {
+        const userAlias = currentUser === "Mduduzi" ? "admin" : "neo";
+        savePreference({ userAlias, key: "custom_icons", value: newIcons });
+    }
+  };
+
+  return (
+    <div className="p-4 h-full overflow-y-auto space-y-8">
+      {/* Wallpapers Section */}
+      <section>
+        <h2
+            className="text-xl text-rose-700 mb-1"
+            style={{ fontFamily: "var(--font-dancing-script)" }}
+        >
+            Wallpapers
+        </h2>
+        <p className="text-xs text-gray-400 mb-4">Choose your backdrop</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {WALLPAPER_GALLERY.map((wp) => (
+            <button
+                key={wp.id}
+                onClick={() => handleSelectWallpaper(wp.id, wp.url)}
+                className={`relative group rounded-lg overflow-hidden aspect-video border-2 transition-all ${
+                selectedId === wp.id
+                    ? "border-rose-500 shadow-lg shadow-rose-200"
+                    : "border-transparent hover:border-rose-300"
+                }`}
+            >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                src={wp.url}
+                alt={wp.label}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                <span className="absolute bottom-1 left-1 right-1 text-[10px] text-white font-medium drop-shadow-md truncate">
+                {wp.label}
+                </span>
+                {selectedId === wp.id && (
+                <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
+                </div>
+                )}
+            </button>
+            ))}
+        </div>
+      </section>
+
+      {/* Icon Theme Section */}
+      <section>
+        <h2
+            className="text-xl text-rose-700 mb-1"
+            style={{ fontFamily: "var(--font-dancing-script)" }}
+        >
+            Icon Theme
+        </h2>
+        <p className="text-xs text-gray-400 mb-4">Select a style</p>
+        <div className="flex flex-wrap gap-2">
+            {["default", "water-gel", "flat", "neon"].map((theme) => (
+                <button
+                    key={theme}
+                    onClick={() => {
+                        setIconTheme(theme);
+                         if (currentUser) {
+                            const userAlias = currentUser === "Mduduzi" ? "admin" : "neo";
+                            savePreference({ userAlias, key: "icon_theme", value: theme });
+                        }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all capitalize ${
+                        (iconTheme || "default") === theme
+                            ? "bg-rose-500 text-white border-rose-500"
+                            : "bg-white/50 text-rose-600 border-rose-200 hover:border-rose-400"
+                    }`}
+                >
+                    {theme.replace("-", " ")}
+                </button>
+            ))}
+        </div>
+      </section>
+
+      {/* Icons Section */}
+      <section>
+        <h2
+            className="text-xl text-rose-700 mb-1"
+            style={{ fontFamily: "var(--font-dancing-script)" }}
+        >
+            App Icons
+        </h2>
+        <p className="text-xs text-gray-400 mb-4">Customize your icons</p>
+        
+        <div className="grid grid-cols-1 gap-2">
+            {APP_REGISTRY.map((app) => {
+                const CustomIcon = customIcons[app.id];
+                const DefaultIcon = app.icon;
+                const isEditing = editingAppId === app.id;
+
+                return (
+                    <div key={app.id} className="flex items-center gap-3 p-2 rounded-lg bg-rose-50/50 border border-rose-100/50 hover:bg-rose-50 transition-colors">
+                        <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-rose-100 overflow-hidden shrink-0 relative">
+                             {CustomIcon ? (
+                                <img src={CustomIcon} alt={app.name} className="w-full h-full object-cover" />
+                             ) : (
+                                <DefaultIcon className="w-5 h-5 text-rose-500" />
+                             )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-medium text-rose-900">{app.name}</h3>
+                            {isEditing ? (
+                                <div className="flex gap-2 mt-1">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Image URL..." 
+                                        className="flex-1 text-xs px-2 py-1 rounded border border-rose-200 focus:outline-none focus:border-rose-400 bg-white/80"
+                                        value={iconUrlInput}
+                                        onChange={(e) => setIconUrlInput(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button 
+                                        onClick={handleSaveIcon}
+                                        className="p-1 rounded bg-rose-500 text-white hover:bg-rose-600"
+                                    >
+                                        <Check className="w-3 h-3" />
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            setEditingAppId(null); 
+                                            setIconUrlInput("");
+                                        }}
+                                        className="p-1 rounded bg-gray-200 text-gray-600 hover:bg-gray-300"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <p className="text-xs text-rose-400 truncate">
+                                    {CustomIcon ? "Custom Icon" : "Default"}
+                                </p>
+                            )}
+                        </div>
+
+                        {!isEditing && (
+                            <div className="flex gap-1">
+                                <button
+                                    onClick={() => {
+                                        setEditingAppId(app.id);
+                                        setIconUrlInput(customIcons[app.id] || "");
+                                    }}
+                                    className="p-1.5 rounded-md hover:bg-rose-100 text-rose-500 transition-colors"
+                                    title="Edit Icon"
+                                >
+                                    <ImageIcon className="w-4 h-4" />
+                                </button>
+                                {CustomIcon && (
+                                    <button
+                                        onClick={() => handleResetIcon(app.id)}
+                                        className="p-1.5 rounded-md hover:bg-rose-100 text-rose-500 transition-colors"
+                                        title="Reset to Default"
+                                    >
+                                        <RotateCcw className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+      </section>
     </div>
   );
 }
@@ -193,8 +346,8 @@ export function SettingsApp() {
     switch (activeTab) {
       case "about":
         return <AboutTab />;
-      case "display":
-        return <DisplayTab />;
+      case "appearance":
+        return <AppearanceTab />;
       case "system":
         return <SystemTab />;
     }
@@ -202,7 +355,7 @@ export function SettingsApp() {
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full bg-rose-50/50">
+      <div className="flex flex-col h-full bg-transparent">
         {/* Mobile: horizontal tab bar */}
         <div className="flex gap-1 p-2 bg-white/60 backdrop-blur-sm border-b border-rose-100 shrink-0 overflow-x-auto">
           {TABS.map((tab) => (
@@ -225,9 +378,9 @@ export function SettingsApp() {
   }
 
   return (
-    <div className="flex h-full bg-rose-50/50">
+    <div className="flex h-full bg-transparent">
       {/* Desktop: left sidebar */}
-      <div className="w-44 bg-white/40 backdrop-blur-md border-r border-rose-100 p-3 flex flex-col gap-1 shrink-0">
+      <div className="w-44 bg-white/10 backdrop-blur-md border-r border-rose-100 p-3 flex flex-col gap-1 shrink-0">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-300 px-2 pt-1 pb-2">
           Preferences
         </span>

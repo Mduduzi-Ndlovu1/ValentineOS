@@ -274,7 +274,7 @@ export function SoulSync(_props: WindowAppProps) {
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e] overflow-hidden">
+    <div className="h-full flex flex-col bg-transparent overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-white/5 backdrop-blur-sm border-b border-white/10 shrink-0">
         <div className="flex items-center gap-2">

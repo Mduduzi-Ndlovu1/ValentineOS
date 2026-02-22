@@ -75,7 +75,7 @@ export const APP_REGISTRY: AppRegistryEntry[] = [
   },
   {
     id: "soul-sync",
-    name: "Soul Sync",
+    name: "Heartbeat",
     icon: Music,
     defaultSize: { width: 700, height: 450 },
     defaultPosition: { x: 200, y: 100 },

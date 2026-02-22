@@ -215,3 +215,105 @@ All tickets completed in order:
   - Shows pulsing "NEW" badge in MenuBar when unread
   - Marks as read when PatchNotes opens
 - Updated story-bible.md with Chapter 5: "The Reader's Nook"
+
+## CMP-001: Data Models
+- Updated `src/types/os.ts` to include `"compass"` AppID.
+- Created `src/types/compass.ts` with strict types: `CompassStatus`, `CompassCategory`, `CompassEvent`, `CompassState`.
+
+## CMP-002: State Management
+- Implemented `src/store/atoms/compass.ts` using Jotai.
+- Created atoms for `compassEventsAtom`, loading, error, and filters.
+- Implemented write-only actions (`fetch`, `add`, `update`, `delete`) with optimistic UI updates and error rollback.
+- Integrated direct Supabase client.
+
+## CMP-003: Sidebar Navigation
+- Created `src/components/apps/Compass/CompassSidebar.tsx`.
+- Implemented vertical navigation with Glassmorphism.
+- Added `compassViewAtom` ("upcoming", "memories", "bucket-list", "map") to filter events.
+- Integrated Lucide icons (Compass, History, Flag, Map) with active glow states.
+
+## CMP-004: Event Cards & Grid
+- Created `src/components/apps/Compass/EventCard.tsx` with "Noir" theme (dark glass).
+- Created `src/components/apps/Compass/EventGrid.tsx` with responsive layout (`grid-cols-2` to `4`).
+- Implemented loading skeletons and empty states ("No adventures found").
+
+## CMP-006: Add Event Modal
+- Created `src/components/apps/Compass/AddEventModal.tsx`.
+- Implemented form with Title, Status, Category, Date, Location, Image URL.
+- Used `framer-motion` for smooth modal transitions.
+
+## CMP-007: App Shell Integration
+- Created `src/components/apps/Compass/Compass.tsx` main shell.
+- Integrated Sidebar, EventGrid, and Modal.
+- Registered Compass in `src/config/appRegistry.tsx` (AppID: "compass", Icon: Compass).
+
+## CMP-008: Splash Screen
+- Created `src/components/apps/Compass/CompassSplash.tsx` with GSAP animations.
+- Implemented spinning compass calibration effect on app launch.
+- Integrated splash screen with `AnimatePresence` in `Compass.tsx`.
+
+## CMP-009: Theme & Mobile Navigation
+- Added `compassThemeAtom` ("light" | "dark") to state.
+- Created `src/components/apps/Compass/CompassMobileNav.tsx` (fixed bottom bar).
+- Updated Sidebar to hide on mobile.
+- Implemented theme toggle (Sun/Moon) in header.
+
+## CMP-010: Mobile First Refactor
+- Refactored `Compass.tsx` to support `flex-col` (mobile) vs `flex-row` (desktop).
+- Updated styling to support dynamic theme backgrounds (`bg-reader-cream` vs `bg-slate-900`).
+
+## CMP-011: UI Redesign (WeShare Style)
+- Redesigned `EventCard` to be landscape (aspect-video image + content below).
+- Added floating date badge and avatar stack (Admin + Neo).
+- Updated `EventGrid` to stagger animations using `framer-motion`.
+
+## CMP-012: Explore Feed Backend
+- Created `/api/compass/explore` API route.
+- Integrated Ticketmaster Discovery API (proxy).
+- Added `exploreEventsAtom` and `exploreSearchAtom` to store.
+
+## CMP-013: Explore View
+- Created `src/components/apps/Compass/ExploreView.tsx` with Search + City inputs.
+- Integrated `searchExploreEventsAtom` to fetch real events.
+- Added "Add to Compass" functionality for explored events.
+
+## CMP-014: Event Detail Modal
+- Created `src/components/apps/Compass/EventDetailModal.tsx` with large cover image and metadata grid.
+- Integrated into Compass shell (opens on card click).
+
+## CMP-015: Pricing & Geolocation
+- Updated API to fetch `priceRanges`.
+- Added price badges to Event Cards.
+- Updated Explore View to auto-fetch events near user's geolocation on mount.
+
+## UI-001: Mobile Dock Drawer
+- Refactored `Dock.tsx` for mobile: Hidden by default, swipe up to reveal.
+- Added "Drawer" animation with Framer Motion drag gestures.
+- Implemented click-away to close.
+
+## UI-002: Water Gel Theme (macOS Style)
+- Updated `DesktopIcon.tsx` and `DockIcon.tsx` with "Water Gel" shader.
+- Used complex Tailwind shadows (`inset`, `drop-shadow`) and gradients.
+- Increased `backdrop-blur` for premium glass feel.
+
+## REBRAND-001: Heartbeat
+- Renamed "Soul Sync" to "Heartbeat" in registry and UI.
+- Updated all apps to use transparent backgrounds (relying on WindowFrame glass).
+- Refactored `WindowFrame` to use consistent `bg-white/10` + `backdrop-blur-xl`.
+
+## PATCH-NOTES-004: Version Bump to 1.2.0
+- Version bumped to "1.2.0" in package.json
+- Updated PatchNotes with v1.2.0 "The Compass & The Canvas" entry
+- Documented major UI overhaul and Compass app integration
+- Updated dev-report.md with new version stats
+
+## CMP-016: Modal Redesign
+- Refactored AddEventModal and EventDetailModal with grid layouts.
+- Increased padding for desktop, centered alignment.
+- Compact header sizes and proper spacing.
+- Added aspect ratios for cinematic image viewing.
+
+## UI-003: Docs & Story Bible Update
+- Updated story-bible.md with Chapter 6: "The Compass & The Canvas".
+- Added new lore terms: The Compass, The Horizon, The Feed, The Gel, The Drawer.
+- Updated ticket-history.md with all recent tickets.

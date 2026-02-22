@@ -5,6 +5,20 @@ import { OS_VERSION } from "@/config/version";
 
 const PATCH_NOTES = [
   {
+    version: "1.2.0",
+    date: "February 23, 2026",
+    title: "The Compass & The Canvas",
+    changes: [
+      "The city looks different today. I tore down the old facades and rebuilt the UI. Glass is clearer, shadows are softer. It feels more like home.",
+      "I added a Compass to your pocket. A map of the world, waiting for us to pick a direction. Four cardinal views: what's coming, where we've been, the horizon of ideas, and the wild feed beyond the walls.",
+      "You can search for events now. Concerts, shows, anything. Ticketmaster is wired in. If there's a ticket, we can find it. Prices show right on the card.",
+      "The Dock has new physics. It feels heavier, more real. On mobile it hides until you call it — swipe up and there they are.",
+      "The icons got a makeover too. Water-gel bubbles, catching light like morning dew. Even renamed Soul Sync to Heartbeat — felt more honest.",
+      "Travel plans live here too. Flights, hotels, the whole itinerary. I want us to be ready when the time comes.",
+      "You can customize everything now. Pick a theme, change any app's icon to whatever you want. It's your city.",
+    ],
+  },
+  {
     version: "1.1.0",
     date: "February 16, 2026",
     title: "The Reader's Nook",
@@ -75,7 +89,7 @@ const PATCH_NOTES = [
 
 export function PatchNotes({}: WindowAppProps) {
   return (
-    <div className="h-full bg-gradient-to-br from-rose-50 to-pink-50 overflow-y-auto">
+    <div className="h-full bg-transparent overflow-y-auto">
       <div className="max-w-2xl mx-auto p-8">
         <div className="text-center mb-8">
           <h1

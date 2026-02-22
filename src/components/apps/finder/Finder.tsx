@@ -187,7 +187,7 @@ export function Finder() {
 
         {/* ─── Grid View ─── */}
         <div
-          className="flex-1 bg-white/90 p-2 md:p-4 overflow-y-auto"
+          className="flex-1 bg-white/10 p-2 md:p-4 overflow-y-auto"
           onClick={handleMainAreaClick}
         >
           {contents.length === 0 ? (

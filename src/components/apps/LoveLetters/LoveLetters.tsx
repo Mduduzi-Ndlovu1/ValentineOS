@@ -155,11 +155,11 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full bg-[#f3e5dc]">
+      <div className="flex flex-col h-full bg-transparent">
         {selectedLetter ? (
           <>
             {/* Mobile: Back bar + editor */}
-            <div className="flex items-center gap-2 p-2 bg-white/40 backdrop-blur-md border-b border-white/30 shrink-0">
+            <div className="flex items-center gap-2 p-2 bg-white/10 backdrop-blur-md border-b border-white/30 shrink-0">
               <button
                 onClick={handleBackToList}
                 className="btn btn-ghost btn-sm text-[#5c1a1a]"
@@ -175,7 +175,7 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
               </span>
               <div className="w-[60px]" />
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center p-2 bg-gradient-to-br from-[#8b5a2b] to-[#5c3a1e] overflow-auto">
+            <div className="flex-1 flex flex-col items-center justify-center p-2 bg-black/20 overflow-auto">
               <div className="mb-2 h-6">
                 {isSaving && (
                   <span className="text-xs text-white/60 animate-pulse">Saving...</span>
@@ -215,9 +215,9 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-full bg-[#f3e5dc]">
+    <div className="flex flex-col md:flex-row h-full bg-transparent">
       {/* Sidebar */}
-      <div className="w-full md:w-64 h-48 md:h-full bg-white/40 backdrop-blur-md border-b md:border-b-0 md:border-r border-white/30 flex-shrink-0">
+      <div className="w-full md:w-64 h-48 md:h-full bg-white/10 backdrop-blur-md border-b md:border-b-0 md:border-r border-white/30 flex-shrink-0">
         <LetterSidebar
           letters={letters}
           selectedLetterId={selectedLetterId}
@@ -229,7 +229,7 @@ export function LoveLetters({ content: initialLetterId }: WindowAppProps) {
       </div>
 
       {/* Main Stage - Desk/Wood background */}
-      <div className="flex-1 flex flex-col items-center justify-center p-2 md:p-8 bg-gradient-to-br from-[#8b5a2b] to-[#5c3a1e] overflow-auto">
+      <div className="flex-1 flex flex-col items-center justify-center p-2 md:p-8 bg-black/20 overflow-auto">
         {selectedLetter ? (
           <>
             {/* Save Indicator */}

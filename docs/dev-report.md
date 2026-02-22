@@ -1,6 +1,6 @@
 # ValentineOS — A Love Letter in Code
 
-**Project Nebula | v1.1.0 | February 16, 2026**
+**Project Nebula | v1.2.0 | February 22, 2026**
 **Built by Mduduzi, for Neo**
 
 ---
@@ -125,6 +125,7 @@ A notification bell in the menu bar collects everything — when a letter is sea
 
 | Version | Date | What I Added |
 |---------|------|--------------|
+| **1.2.0** | Feb 22 | Major UI Overhaul — Cleaner glassmorphism, softer shadows. Compass app — Travel itinerary, Ticketmaster events, Map integration. New Dock physics. |
 | **1.1.0** | Feb 16 | Bookstore app — The Reader's Nook. NYT Bestsellers, Google Books search, YouTube & NYT reviews. Favorites that persist. When you save a book, I get a notification. Custom fonts (Montserrat + Libre Caslon). Wallpaper now sticks across sessions. |
 | **1.0.3** | Feb 16 | You can connect your Spotify too now. Our hearts sync. Resonance detection. The pulsing heart with ripple reverberations. |
 | **1.0.2** | Feb 16 | Soul Sync — I connected my Spotify first. Built the whole OAuth flow. Dark cosmic gradient UI. |
@@ -159,5 +160,5 @@ With all my love,
 
 ---
 
-*ValentineOS v1.1.0 | ~5,500 lines of love across 70 files | Built with Next.js, Jotai, Tailwind, Framer Motion, Tiptap, Supabase, Spotify, Google Books & YouTube*
+*ValentineOS v1.2.0 | ~6,000 lines of love across 80 files | Built with Next.js, Jotai, Tailwind, Framer Motion, Tiptap, Supabase, Spotify, Google Books & Ticketmaster*
 *Repository: https://github.com/Mduduzi-Ndlovu1/ValentineOS*

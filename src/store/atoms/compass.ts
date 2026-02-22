@@ -10,6 +10,7 @@ export const compassLoadingAtom = atom<boolean>(false);
 export const compassErrorAtom = atom<string | null>(null);
 export const compassFilterStatusAtom = atom<CompassStatus | "all">("all");
 export const compassFilterCategoryAtom = atom<CompassCategory | "all">("all");
+export const compassSelectedEventAtom = atom<CompassEvent | null>(null);
 export const compassThemeAtom = atom<"light" | "dark">("light");
 
 // Derived Atoms
@@ -182,3 +183,162 @@ export const deleteCompassEventAtom = atom(
     }
   }
 );
+
+// -----------------------------------------------------------------------------
+// Explore Feed (Ticketmaster Integration)
+// -----------------------------------------------------------------------------
+
+export const exploreEventsAtom = atom<CompassEvent[]>([]);
+export const exploreLoadingAtom = atom<boolean>(false);
+export const exploreErrorAtom = atom<string | null>(null);
+export const exploreSearchAtom = atom<{
+  query: string;
+  city: string;
+  lat?: number;
+  lng?: number;
+  radius?: number;
+  startDateTime?: string;
+  endDateTime?: string;
+}>({
+  query: "",
+  city: "",
+});
+
+export const searchExploreEventsAtom = atom(
+  null,
+  async (get, set, overrideParams?: {
+    lat?: number;
+    lng?: number;
+    radius?: number;
+    startDateTime?: string;
+    endDateTime?: string;
+    query?: string;
+    city?: string;
+  }) => {
+    const currentState = get(exploreSearchAtom);
+    
+    // Merge override params with current state, prioritizing overrides
+    const query = overrideParams?.query ?? currentState.query;
+    const city = overrideParams?.city ?? currentState.city;
+    const lat = overrideParams?.lat ?? currentState.lat;
+    const lng = overrideParams?.lng ?? currentState.lng;
+    const radius = overrideParams?.radius ?? currentState.radius;
+    const startDateTime = overrideParams?.startDateTime ?? currentState.startDateTime;
+    const endDateTime = overrideParams?.endDateTime ?? currentState.endDateTime;
+
+    // Check if we have enough info to search
+    // Need either a query, a city, or geolocation
+    if (!query && !city && (lat === undefined || lng === undefined)) {
+      set(exploreErrorAtom, "Please enter a keyword, city, or allow location access");
+      return;
+    }
+
+    set(exploreLoadingAtom, true);
+    set(exploreErrorAtom, null);
+    set(exploreEventsAtom, []);
+
+    try {
+      const params = new URLSearchParams();
+      if (query) params.append("keyword", query);
+      if (city) params.append("city", city);
+      
+      if (lat !== undefined && lng !== undefined) {
+        params.append("latlong", `${lat},${lng}`);
+      }
+      
+      if (radius) params.append("radius", radius.toString());
+      if (startDateTime) params.append("startDateTime", startDateTime);
+      if (endDateTime) params.append("endDateTime", endDateTime);
+
+      // Optional: Filter by classificationName if needed, e.g. 'Music', 'Arts'
+      // params.append("classificationName", "Music");
+
+      const response = await fetch(`/api/compass/explore?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error(`Error fetching events: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const rawEvents = data.events || [];
+
+      // Map Ticketmaster events to CompassEvent format
+      const mappedEvents: CompassEvent[] = rawEvents.map((tmEvent: any) => {
+        // Extract venue info
+        const venue = tmEvent._embedded?.venues?.[0];
+        const locationName = venue?.name || tmEvent.place?.name;
+        const cityName = venue?.city?.name || tmEvent.place?.city?.name;
+        const fullLocation = [locationName, cityName].filter(Boolean).join(", ");
+
+        // Extract image (find best quality or first)
+        const image = tmEvent.images?.find((img: any) => img.width > 600) || tmEvent.images?.[0];
+
+        // Map category
+        // Ticketmaster classifications: Segment -> Genre -> SubGenre
+        const segment = tmEvent.classifications?.[0]?.segment?.name?.toLowerCase();
+        let category: CompassCategory = "other";
+        if (segment === "music" || segment === "arts & theatre") category = "activity";
+        else if (segment === "sports") category = "activity";
+        else if (segment === "film") category = "date";
+        // 'travel' and 'food' are less likely from TM, but 'other' is a safe fallback.
+
+        // Map price range
+        const priceRange = tmEvent.priceRanges?.[0]
+          ? {
+              min: tmEvent.priceRanges[0].min,
+              max: tmEvent.priceRanges[0].max,
+              currency: tmEvent.priceRanges[0].currency,
+            }
+          : null;
+
+        return {
+          id: `tm-${tmEvent.id}`, // Prefix to avoid collision with UUIDs, though not saved to DB yet
+          created_at: new Date().toISOString(),
+          created_by: "admin", // Default, will be overridden on import if needed
+          title: tmEvent.name,
+          description: tmEvent.info || tmEvent.pleaseNote || null,
+          status: "idea", // Default status for explore items
+          category: category,
+          location: fullLocation || null,
+          event_date: tmEvent.dates?.start?.dateTime || tmEvent.dates?.start?.localDate || null,
+          image_url: image?.url || null,
+          coordinates: venue?.location
+            ? {
+                lat: parseFloat(venue.location.latitude),
+                lng: parseFloat(venue.location.longitude),
+              }
+            : null,
+          price_range: priceRange,
+        };
+      });
+
+      set(exploreEventsAtom, mappedEvents);
+    } catch (error) {
+      console.error("Explore search failed:", error);
+      set(exploreErrorAtom, error instanceof Error ? error.message : "Search failed");
+    } finally {
+      set(exploreLoadingAtom, false);
+    }
+  }
+);
+
+export const importEventAtom = atom(
+  null,
+  async (_get, set, event: CompassEvent) => {
+    // Remove the temporary ID prefix if present and let DB generate a real UUID
+    // Or simpler: just pass the data to addCompassEventAtom which handles insertion
+    
+    // We need to strip the ID because addCompassEventAtom expects Omit<CompassEvent, "id" | "created_at">
+    // and Supabase will generate the ID.
+    const { id, created_at, ...eventData } = event;
+    
+    // Call the existing add action
+    await set(addCompassEventAtom, eventData);
+    
+    // Optionally remove from explore list to indicate it's been added?
+    // Or just let the UI handle showing "Added" state.
+    // For now, let's remove it from the explore list so it doesn't show up as a duplicate suggestion
+    set(exploreEventsAtom, (prev) => prev.filter((e) => e.id !== id));
+  }
+);
+

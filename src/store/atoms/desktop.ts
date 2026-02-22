@@ -11,6 +11,9 @@ const FALLBACK_GRADIENT =
 export const wallpaperAtom = atom<string>(DEFAULT_WALLPAPER);
 export const wallpaperFallbackAtom = atom<string>(FALLBACK_GRADIENT);
 
+export const customIconsAtom = atom<Record<string, string>>({});
+export const iconThemeAtom = atom<string>("default");
+
 export interface UserPreferences {
   wallpaper_url: string | null;
   preferences: Record<string, any>;
@@ -35,6 +38,14 @@ export const loadPreferencesAtom = atom(
         
         if (data.wallpaper_url) {
           set(wallpaperAtom, data.wallpaper_url);
+        }
+        
+        if (data.preferences?.custom_icons) {
+          set(customIconsAtom, data.preferences.custom_icons);
+        }
+
+        if (data.preferences?.icon_theme) {
+          set(iconThemeAtom, data.preferences.icon_theme);
         }
         
         const lastReadVersion = data.last_read_version || data.preferences?.last_read_version || null;

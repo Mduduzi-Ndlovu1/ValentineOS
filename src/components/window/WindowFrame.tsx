@@ -159,7 +159,7 @@ export function WindowFrame({ window: win }: WindowFrameProps) {
       animate="animate"
       exit="exit"
       transition={windowTransition}
-      className={`flex flex-col shadow-2xl overflow-hidden bg-white/80 backdrop-blur-xl border border-white/30 ${
+      className={`flex flex-col shadow-2xl overflow-hidden bg-white/10 backdrop-blur-xl border border-white/20 ${
         isMobile ? "fixed inset-0 rounded-none" : "absolute rounded-lg"
       }`}
       style={

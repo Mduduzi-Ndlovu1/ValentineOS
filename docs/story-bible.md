@@ -156,3 +156,26 @@ Someone built a new room off the main square. Warm. Quiet. Cream walls, soft bei
 6. **End chapters with a question or an image**, never a summary. Leave something hanging.
 7. **Each chapter title is 3-5 words**, evocative, no version number.
 8. **5-7 beats per chapter.** Not too many, not too few. Each one earns its place.
+
+---
+
+### Chapter 6: "The Compass & The Canvas" (v1.2.0 — Feb 23, 2026)
+**Story beat:** Navigation. A new way to chart the course.
+
+Someone rolled out a map on the table. Not a paper map — a digital canvas that stretched and glowed. Four cardinal points marked in soft light: North for what's coming, South for where we've been, East for the horizon of ideas, and West — the wildest one — for what's out there, beyond the city walls. A feed of the world's frequencies. Music. Art. Gatherings. Real-time. Live.
+
+They rebuilt the icons too. Gone were the flat squares. In their place: water-gel bubbles, refracting light like morning dew. The harbour changed with them — a drawer now, hiding until called. Swipe up, and there they are. The city learned to breathe differently on different screens.
+
+**Features introduced:** Compass app (cardinal navigation, status workflow), West tab (Ticketmaster integration, geolocation search), pricing on events, "Heartbeat" rebranding from Soul Sync, Water Gel icon shader, Mobile Drawer Dock, modal redesigns with grid layouts, global glassmorphism updates, Appearance Settings (themes + custom icons).
+
+---
+
+### Lore Addition
+
+| Term | Meaning | First Appears |
+|------|---------|---------------|
+| **The Compass** | New district for planning and events. Four cardinal views. | Ch 6 |
+| **The Horizon** | The "East" view — bucket list of ideas. | Ch 6 |
+| **The Feed** | The "West" view — live events pulled from the outside world. | Ch 6 |
+| **The Gel** | New icon aesthetic. Water-like, refractive, premium. | Ch 6 |
+| **The Drawer** | Mobile dock interaction. Hidden until summoned. | Ch 6 |

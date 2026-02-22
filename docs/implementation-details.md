@@ -300,6 +300,26 @@ user_preferences (
 
 ---
 
+## Compass (Travel & Events)
+- **Goal:** Shared itinerary and event discovery.
+- **State:** `src/store/atoms/compass.ts`.
+- **Backend:**
+  - Supabase `compass_events` table (CRUD).
+  - Ticketmaster API via `/api/compass/explore` (proxy).
+- **Features:**
+  - **Cardinal Navigation:** North (Upcoming), South (Memories), East (Bucket List), West (Explore).
+  - **Explore Feed:** Geolocation-based event search (50mi radius).
+  - **Pricing:** Extracts min/max price from API.
+  - **Themes:** Light/Dark mode support.
+
+## UI Overhaul (v1.2.0)
+- **Heartbeat:** Rebranded from Soul Sync. Transparent glass UI.
+- **Water Gel Icons:** Desktop and Dock icons now use a complex Tailwind shadow/gradient stack to mimic macOS Big Sur "squircle" icons.
+- **Mobile Dock:** Drawer-style interaction (swipe up to reveal).
+- **Glassmorphism:** Global `WindowFrame` update (`bg-white/10`, `backdrop-blur-xl`).
+
+---
+
 ## Gotchas & Lessons Learned
 
 1. **Directory name** — `ValentineOS` has capitals; `create-next-app` rejects this for npm naming. Used manual Next.js setup instead.

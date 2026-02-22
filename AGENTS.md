@@ -1,185 +1,143 @@
 # AGENTS.md - ValentineOS Development Guide
 
-This file provides guidelines for agents working on the ValentineOS project.
+This file is the primary instruction manual for agents working on ValentineOS ("Project Nebula").
 
-## Project Overview
+## 1. Project Overview
 
-ValentineOS is a macOS-inspired Web Operating System built with Next.js 14 (App Router), Jotai for state management, Framer Motion for animations, and Tailwind CSS with DaisyUI.
+ValentineOS is a macOS-inspired Web Operating System built with **Next.js 14 (App Router)**, **Jotai** (atomic state), **Framer Motion** (animations), and **Tailwind CSS + DaisyUI** (styling).
+It features a romantic "Valentine" theme, window management, real-time collaboration, and a rich narrative layer.
+
+**Documentation Index:**
+- `docs/reference.md`: Type definitions, Atom tables, Directory structure, Design tokens.
+- `docs/implementation-details.md`: Subsystem internals (Dock, Windows, Boot, Heartbeat).
+- `docs/story-bible.md`: Narrative tone for patch notes (Noir/City persona).
+- `docs/ticket-history.md`: Log of completed work.
 
 ---
 
-## Commands
+## 2. Commands
 
 ### Development
 ```bash
 npm run dev          # Start dev server at http://localhost:3000
-npm run build        # Production build
+npm run build        # Production build + Type check
 npm start            # Serve production build
 ```
 
-### Linting & Type Checking
+### Quality Control
 ```bash
-npm run lint         # Run ESLint with Next.js config
+npm run lint         # Run ESLint (next/core-web-vitals)
 ```
-
-There are **no test commands** currently configured. Do not add test frameworks without user approval.
+*Note: There are **no test commands** configured. Do not add test frameworks without explicit user approval.*
 
 ---
 
-## Code Style Guidelines
+## 3. Core Rules & Conventions
 
 ### TypeScript (Strict Mode)
-
-- **NO `any` types** - All props and atoms must be properly typed
-- Use `import type` for type-only imports to enable tree-shaking
-- Define types in `src/types/` (os.ts for OS types, fs.ts for file system types)
-- Export interfaces with descriptive names (e.g., `WindowInstance`, `FileSystemItem`)
+- **NO `any` types** - All props and atoms must be properly typed in `src/types/`.
+- **Exports:** Use `export function` for components, not `export const`.
+- **Directives:** Use `"use client"` for any component using hooks or atoms.
 
 ### Imports
-
-- Use `@/*` path alias (e.g., `import { foo } from "@/store/atoms/windows"`)
-- Group imports in this order:
-  1. External (React, Jotai, Framer Motion, Lucide)
+- **Alias:** Use `@/*` for all internal imports (e.g., `@/store/atoms/windows`).
+- **Grouping:**
+  1. External (React, Jotai, Framer Motion)
   2. Internal (types, config, store)
   3. Local components
-- Use `import { x } from "module"` (named imports) over `import * as x`
-- Separate import groups with a single blank line
-
-Example:
-```typescript
-import { useCallback, useRef } from "react";
-import { useSetAtom } from "jotai";
-import { motion } from "framer-motion";
-import type { WindowInstance, ResizeDirection } from "@/types/os";
-import { MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from "@/types/os";
-import { focusWindowAtom, resizeWindowAtom } from "@/store/atoms/windows";
-import { getAppEntry } from "@/config/appRegistry";
-import { WindowTitleBar } from "./WindowTitleBar";
-```
-
-### Naming Conventions
-
-- **Components**: PascalCase (e.g., `WindowFrame`, `DockIcon`)
-- **Atoms**: camelCase with `Atom` suffix (e.g., `openWindowsAtom`, `wallpaperAtom`)
-- **Types/Interfaces**: PascalCase (e.g., `WindowInstance`, `AppID`)
-- **Constants**: UPPER_SNAKE_CASE for true constants (e.g., `MIN_WINDOW_WIDTH`)
-- **Files**: PascalCase for components (e.g., `WindowFrame.tsx`), camelCase for utilities
-
-### Component Structure
-
-- Use "use client" directive for any component using hooks or Jotai atoms
-- Props interfaces should be defined inline or in separate file if reused
-- Destructure props in function signature: `function Component({ prop1, prop2 }: Props)`
-- Use `export function` not `export const` for React components
+- **Syntax:** Use named imports: `import { x } from "module"`.
 
 ### State Management (Jotai)
-
-- Atoms go in `src/store/atoms/` directory
-- Write-only atoms use the `atom(null, (get, set, payload) => {...})` pattern
-- Derived (read-only) atoms use `atom((get) => {...})`
-- Private atoms (not exported) should not be prefixed with `Atom` unless exported
-- Action atoms should have descriptive names: `openWindowAtom`, `closeWindowAtom`, etc.
+- **Atomic State Only:** No React Context. All global state lives in `src/store/atoms/`.
+- **File Structure:**
+  - `windows.ts`: Window instances, z-index, focus.
+  - `filesystem.ts`: File system map + derived atoms.
+  - `desktop.ts`: Wallpaper, icons, user preferences.
+  - `letters.ts`: Love Letters data.
+  - `soulSync.ts`: Spotify playback state.
+  - `books.ts`: Bookstore state.
+  - `compass.ts`: Travel and events state.
 
 ### Styling (Tailwind + DaisyUI)
+- **Theme:** `data-theme="valentine"`.
+- **Glassmorphism:** `bg-white/10 border border-white/20 backdrop-blur-2xl`.
+- **Window Body:** `bg-white/80 backdrop-blur-xl`.
+- **Mobile First:** Use `useIsMobile()` hook (768px breakpoint).
+  - *Mobile:* Full-screen windows (`fixed inset-0`), static dock (`z-[200]`).
+  - *Desktop:* Draggable windows, magnification dock (`z-50`).
 
-- Use DaisyUI `valentine` theme: `data-theme="valentine"` in layout
-- Use Tailwind utility classes with `bg-white/80`, `backdrop-blur-xl`, etc.
-- Avoid custom CSS unless absolutely necessary - use Tailwind
-- Glassmorphism pattern: `bg-white/10 border border-white/20 backdrop-blur-2xl`
-- Use `className` for styles, not `style` prop (except for dynamic values)
+---
 
-### Animations (Framer Motion)
+## 4. Critical "Gotchas" (Read Carefully)
 
-- Use `motion.div` for animated elements
-- Define variants as separate constants outside component
-- Use spring transitions: `{ type: "spring", stiffness: 300, damping: 30 }`
-- Use `layout={false}` to prevent Framer from animating position/size changes during drag/resize
+1.  **No Body Scroll:** `body { overflow: hidden }`. Scroll logic exists only within app windows.
+2.  **Config-Driven Apps:** Apps are defined in `src/config/appRegistry.tsx`. This file must be `.tsx` because it contains JSX components.
+3.  **Tiptap SSR:** Always set `immediatelyRender: false` in `useEditor` to avoid hydration mismatches.
+4.  **Database Writes:** **Debounce all writes.** Never call Supabase on every keystroke.
+5.  **Wallpaper CSS:** Use `backgroundImage` (not `background` shorthand) to prevent resetting `backgroundSize: "cover"`.
+6.  **JSX Comments:** In ternary expressions, use `//` comments, not `{/* */}` (causes build errors).
+7.  **Framer Motion on Mobile:** Hooks like `useTransform` must always be called (Rules of Hooks). Override their output with static styles on mobile, do not conditionally skip the hook.
+8.  **Next.js 14 Viewport:** Export `viewport` separately from `metadata`.
 
-### Error Handling
+---
 
-- Use optional chaining (`?.`) and nullish coalescing (`??`) for safe access
-- Avoid try/catch unless absolutely necessary (Next.js handles errors at page level)
-- Validate function inputs with early returns
-- Use `typeof window !== "undefined"` checks for SSR compatibility
+## 5. Architecture Reference
+
+### File System
+- **Structure:** Normalized flat map `Record<string, FileSystemItem>`.
+- **Tree:** Folders have `children` (array of IDs). Items have `parentId`.
+- **Mock Data:** `src/config/initialFileSystem.ts`.
 
 ### Window System
+- **Drag:** Manual pointer events in `WindowTitleBar.tsx` (not Framer Motion drag).
+- **Resize:** 8 invisible edge/corner handles in `WindowFrame.tsx`.
+- **Z-Index:** Monotonically increasing counter (starts at 100).
+- **Animations:** `AnimatePresence` in `WindowManager`; `layout={false}` on `WindowFrame`.
 
-- Window ID format: `${appId}-${Date.now()}`
-- Z-index starts at 100 (above dock at z-50)
-- Minimum window size: 300x200 pixels
-- Always enforce minimum sizes in resize handlers
+### Apps & Features
+- **Finder:** Recursive file navigation, breadcrumbs, grid view.
+- **Love Letters:** Rich text (Tiptap), distinctive stationery UI, Supabase persistence.
+- **Heartbeat:** Spotify widget. Two users (Admin/Neo) connect via OAuth. Server-side API aggregates playback. "Resonance" = same track playing -> Heart pulses.
+- **Settings:** Uptime counter (from `RELATIONSHIP_START_DATE`), Wallpaper picker (Unsplash).
+- **Bookstore:** NYT Bestsellers, Google Books Search, Favorites (Supabase).
+- **Patch Notes:** Displays version history. "New" badge tracks `last_read_version` in user preferences.
+- **Compass:** Travel itinerary, Ticketmaster integration, Geolocation.
 
----
+### Backend (Supabase)
+- **Client:** `src/lib/supabase.ts` (Graceful fallback if env vars missing).
+- **Tables:**
+  - `love_letters`: Sealed/unsealed letters.
+  - `spotify_tokens`: OAuth tokens for "Heartbeat".
+  - `user_preferences`: Wallpapers, last read version.
+  - `book_favorites` / `book_requests`: Bookstore user data.
+  - `compass_events`: Travel itinerary and events.
 
-## Project Structure
-
-```
-src/
-├── app/           # Next.js pages (layout.tsx, page.tsx, globals.css)
-├── components/    # React components
-│   ├── apps/      # App components (Finder, TextEditor, ImageViewer, LoveLetters)
-│   │   └── LoveLetters/   # Love letters app (LoveLetters, LetterSidebar, LetterEditor, Stationery)
-│   ├── desktop/   # Desktop components (Desktop, DesktopIcon)
-│   ├── dock/      # Dock components (Dock, DockIcon)
-│   └── window/    # Window system (WindowFrame, WindowManager, WindowTitleBar)
-├── config/        # App registry, initial file system
-├── lib/          # Utility libraries (supabase.ts)
-├── services/     # Service layer (letterService.ts)
-├── store/        # Jotai atoms and actions
-│   ├── atoms/    # State atoms (desktop.ts, filesystem.ts, windows.ts, letters.ts)
-│   └── actions/  # Complex actions (fileActions.ts)
-└── types/        # TypeScript definitions (os.ts, fs.ts, letters.ts)
-```
+### API Routes
+- `/api/compass/explore`: Fetches events and location data.
 
 ---
 
-## Adding New Apps
+## 6. Narrative & Tone (The "Noir" Persona)
 
-1. Add `AppID` to union type in `src/types/os.ts`
-2. Create component in `src/components/apps/`
-3. Add entry to `APP_REGISTRY` in `src/config/appRegistry.tsx`
-4. App automatically appears in dock and desktop icons
+The project has a distinct narrative voice used in Patch Notes and Easter Eggs.
+Refer to `docs/story-bible.md` for the full guide.
 
----
-
-## Important Notes
-
-- No scrolling on body - scroll logic exists only within app windows
-- All windows use pointer events (not mouse events) for cross-platform support
-- Desktop icons persist positions to Jotai atom on drag end
-- Dock has magnification effect using shared `MotionValue` for mouse position
-- Boot sequence uses `AnimatePresence` for smooth transitions
+- **The Narrator:** "The Architect" (Admin). Speaks to "The Signal" (Neo).
+- **Tone:** Noir, atmospheric, romantic, "City in the Void".
+- **Style:** Short sentences. Feature first, color second. "I built this for you."
+- **Key Lore:**
+  - *The City:* ValentineOS.
+  - *The Harbor:* The Dock.
+  - *The Clocktower:* Uptime Counter.
+  - *Resonance:* Two users listening to the same song.
 
 ---
 
-## Love Letters App
+## 7. Adding New Features
 
-The Love Letters app is a romantic letter-writing application with Supabase backend integration.
-
-### Key Files
-- `src/components/apps/LoveLetters/LoveLetters.tsx` - Main container
-- `src/components/apps/LoveLetters/LetterSidebar.tsx` - Glassmorphism sidebar with + button
-- `src/components/apps/LoveLetters/LetterEditor.tsx` - Tiptap rich text editor
-- `src/components/apps/LoveLetters/Stationery.tsx` - Paper component with lined texture
-- `src/lib/supabase.ts` - Supabase client
-- `src/services/letterService.ts` - CRUD operations
-- `src/store/atoms/letters.ts` - Jotai state atoms
-- `src/types/letters.ts` - LoveLetter interface
-
-### Features
-- Create new letters with + button
-- Edit title, author, and content
-- Auto-save with debouncing (500ms for title/author, 2000ms for content)
-- Save button - saves and seals the letter (read-only)
-- Seal button - locks the letter without saving
-- Wax seal badge (Heart icon) on sealed letters
-
-### Tiptap Editor
-- Use `immediatelyRender: false` to avoid SSR hydration errors
-- Style `.tiptap-editor` class with Dancing Script font
-- Use debounced onUpdate callbacks to prevent excessive API calls
-
-### Font Configuration
-- Dancing Script font configured in `src/app/layout.tsx`
-- CSS variable: `--font-dancing-script`
-- Apply via: `style={{ fontFamily: "var(--font-dancing-script)" }}`
+1.  **New App:**
+    - Add `AppID` to `src/types/os.ts`.
+    - Create Component in `src/components/apps/`.
+    - Register in `src/config/appRegistry.tsx`.
+2.  **New Atom:** Add to appropriate file in `src/store/atoms/`.
+3.  **New API Route:** Create in `src/app/api/`.
